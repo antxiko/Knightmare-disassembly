@@ -1,0 +1,119 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El juego — Knightmare (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html" style=color:var(--tinta)>El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-GAME.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-juego">El juego</h1>
+<p><em>Knightmare</em> —en Japon <em>Majou Densetsu</em>, «la leyenda del castillo demoniaco»— es un matamarcianos vertical con armadura. Popolon sube por ocho fases matando bichos para rescatar a Aphrodite, y el cartucho lo resuelve con un motor de decorado por bandas y tres ranuras de sprites que se van recargando.</p>
+<p><img src="../imagenes/titulo.png?v=e00eac8f" alt="El titulo"></p>
+<p><em>La pantalla del titulo, montada ejecutando los pasos de <code>monta_el_titulo</code> (0x47BA). El rotulo grande son 33 casillas —once por tres— que un bucle escribe seguidas desde la 0x60.</em></p>
+<h2 id="las-ocho-fases-enteras">Las ocho fases, enteras</h2>
+<p>Cada fase es una tira vertical de <b>61 bandas de cuatro filas</b>, o sea 244 filas de casillas. No esta guardada como un mapa: se monta bloque a bloque.</p>
+<p><img src="../imagenes/fase_1.png?v=a2deabca" alt="La fase 1"></p>
+<p><em>La fase 1 entera. Sale de los codigos de bloque de <code>0x9E51</code> y de los bloques de 4x4 casillas de <code>0x9A6D</code>.</em></p>
+<p>El montador es <code>0x6502</code> y trabaja asi:</p>
+<ul><li>La fase se parte en <b>diez tramos</b>, y cada tramo en <b>siete bandas</b> de cuatro filas.</li><li>Cada banda son <b>ocho grupos de cuatro columnas</b>. De cada grupo sale un codigo de bloque: los siete bits bajos indexan la tabla de <code>0x99ED</code> —64 punteros a bloques de 4x4 casillas— y <b>el bit 7 dice que el bloque va espejado</b>.</li><li>Detras de cada grupo, un <code>rl</code> saca un bit de un mapa de bits: con el bit puesto el puntero avanza al bloque siguiente, y con el a cero <b>se repite el bloque anterior</b>. Ahi esta la compresion del decorado.</li></ul>
+<p>Y los bloques <b>se solapan entre si</b>: <code>0x9C21</code> y <code>0x9C3E</code> caen a medio bloque de otro, asi que un mismo tramo de bytes sirve de dos bloques distintos.</p>
+<h2 id="tres-decorados-de-un-solo-guion-de-color">Tres decorados de un solo guion de color</h2>
+<p><img src="../imagenes/fase_4.png?v=9f5a86da" alt="La fase 4"></p>
+<p><em>La fase 4 usa las MISMAS casillas que la 1. Lo que cambia es la paleta.</em></p>
+<p>Las fases 0, 3 y 7 comparten el guion de patrones <b>y</b> el de color. Lo que las distingue es <code>(0xE661)</code>: el lector de bloques (<code>0x443B</code>) traduce cinco codigos de color —0xE1, 0xEC, 0xE8, 0xE6 y 0xE5— restandoles 0x50, y otros 0x50 mas si el banco es el 2. Un bloque de 640 bytes da los tres decorados.</p>
+<p>Las fases 5 y 6 van mas lejos: comparten casillas y color, y <b>solo se diferencian en el mapa</b>.</p>
+<h2 id="popolon-son-tres-sprites">Popolon son tres sprites</h2>
+<p><img src="../imagenes/jugador.png?v=d5db067a" alt="Los fotogramas del muneco"></p>
+<p><em>Los doce fotogramas. Los cuatro ultimos son la explosion.</em></p>
+<p>El muneco se pinta con <b>tres sprites de 16x16</b> superpuestos: <code>0x5E2D</code> los escribe con los patrones 0, 1 y 2. Los dos primeros los sube el fotograma —cada uno ocupa <b>64 bytes justos</b>, o sea dos patrones— y el tercero es el primero del banco fijo de la fase. La <code>y</code> de cada uno y su color salen de un bloque de seis bytes: tres parejas <code>[ajuste de y][color]</code>.</p>
+<p>Hay siete animaciones en la tabla de <code>0xA5B4</code>, y una de ellas —la 2— alterna sus colores con los de <code>0xA5EF</code> para hacer el parpadeo de invulnerable.</p>
+<h2 id="el-bestiario-no-cabe-entero">El bestiario no cabe entero</h2>
+<p><img src="../imagenes/banco_de_enemigos.png?v=bd21ab0e" alt="El banco de enemigos"></p>
+<p><em>Los 45 patrones de los dieciseis bloques de <code>0xA993</code>.</em></p>
+<p>La hoja de sprites del MSX son 64 patrones de 16x16 y no llegan, asi que el cartucho tiene <b>tres ranuras</b> —VRAM <code>0x1D00</code>, <code>0x1E00</code> y <code>0x1F00</code>— que va recargando por turno: <code>0x78F9</code> descomprime cuatro patrones en la que toque y se lleva ademas el numero de patron base, que luego se le suma a cada sprite del bicho.</p>
+<p>Cada enemigo se pinta con <b>dos sprites</b>, y el par sale de la tabla de <code>0x7772</code>: 38 bloques de ocho bytes con dos entradas <code>[dy][dx][patron][color]</code>.</p>
+<p><img src="../imagenes/sprites_fase.png?v=138c1012" alt="Las armas y los objetos"></p>
+<p><em>Los 37 patrones fijos que <code>0x54BE</code> sube al empezar cada fase: las armas, los disparos y los objetos. Iguales en las ocho fases.</em></p>
+<h2 id="el-marcador-y-el-reloj-del-jefe">El marcador y el reloj del jefe</h2>
+<p><img src="../imagenes/pantalla_fase1.png?v=a395543c" alt="La primera pantalla de la fase 1"></p>
+<p><em>Tal como sale del emulador: el cotejo byte a byte da cero diferencias.</em></p>
+<p>SCORE, HISCORE, REST y STAGE van abajo, en la fila 22, y sus cifras en la 23. La puntuacion son tres bytes en BCD desde <code>0xE056</code> y el record otros tres desde <code>0xE053</code>; cuando el byte alto pasa del umbral de <code>(0xE063)</code>, <code>0x4305</code> regala una vida y sube el umbral 0x10 —diez mil puntos— para la siguiente.</p>
+<p>En la pantalla del jefe el marcador de vueltas se cambia por un <b>reloj en BCD</b> que baja segundo a segundo: al llegar a cuatro minutos cambia la musica, y al llegar a cero se acabo.</p>
+<footer><p><em>Knightmare</em> -en Japon <em>Majou Densetsu</em>- lo publico Konami para MSX en 1986; su numero de catalogo es RC-739 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.</p></footer></div>

@@ -1,0 +1,115 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>En el emulador — Knightmare (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html" style=color:var(--tinta)>En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../IN-THE-EMULATOR.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="en-el-emulador">En el emulador</h1>
+<p>Aqui no hay capturas de pantalla, pero el emulador si se usa: para <b>cotejar</b> lo que dibuja Python contra lo que el VDP tiene de verdad.</p>
+<h2 id="el-cotejo">El cotejo</h2>
+<pre><code>make vram</code></pre>
+<p>Arranca openMSX sin ventana, deja que la demostracion se juegue sola, vuelca los 16 KB de VRAM en nueve instantes y los resta de los que monta Python.</p>
+<pre><code>fase 0  color 0x0000..0x17FF   6144 bytes  0 distintos
+        patrones 0x2000..0x37FF 6144 bytes  0 distintos
+        nombres, filas 0 a 21   704 casillas 0 distintas
+...
+---- 8 pantallas, 0 bytes distintos</code></pre>
+<p>Que salga a cero es lo que permite publicar las imagenes diciendo que son las del cartucho.</p>
+<h2 id="como-se-llega-a-las-ocho-fases-sin-jugar">Como se llega a las ocho fases sin jugar</h2>
+<p>No hace falta jugar, y tampoco hace falta falsear nada. <code>monta_la_fase</code> (<code>0x53D3</code>) lee la fase de <code>(0xE062)</code> y de ahi saca <b>todo</b>: el mapa de la tabla de <code>0x99CD</code>, las casillas y el color de la de <code>0x563C</code> y los enemigos de la de <code>0x6A98</code>. Un punto de interrupcion en <code>0x53D3</code> —antes de que la lea— escribe ahi la que toque, y el cartucho monta <b>esa</b> fase con su propio codigo. Se cambia un byte de partida, como haria un jugador llegando a esa fase.</p>
+<p>El volcado va <b>medio segundo despues</b>: ya estan subidos los patrones, el color y la tabla de nombres, y el decorado todavia no ha subido ninguna fila, que es lo que hace comparable el mapa.</p>
+<h2 id="dos-trampas-que-costaron-el-cotejo">Dos trampas que costaron el cotejo</h2>
+<p><b>El cartucho no borra los patrones ni el color al cambiar de fase</b>, solo la tabla de nombres. Las fases 1, 2 y 4 traen menos casillas que la 0 —61, 59 y 79 contra 80—, asi que lo que sobra se queda de la anterior. Montar una fase suelta daba 456 bytes de diferencia en el color; encadenarlas como las encadena el juego, cero.</p>
+<p><b>El marcador va abajo, no arriba.</b> La pantalla empieza cuatro filas dentro del buffer de casillas —<code>vuelca_la_pantalla</code> copia desde <code>0xE8A0</code> menos <code>(0xE091) &amp; 3</code> filas—, y las dos ultimas filas de la pantalla son SCORE, HISCORE, REST y STAGE, que se pintan encima despues.</p>
+<h2 id="verlo-jugar">Verlo jugar</h2>
+<pre><code>openmsx -machine Philips_VG_8020 -cart knightmare.rom</code></pre>
+<p>El cartucho encadena solo presentacion, titulo y demostracion, y la demostracion es una partida grabada, asi que dos arranques dan lo mismo.</p>
+<h2 id="si-quieres-mirar-por-dentro">Si quieres mirar por dentro</h2>
+<p>La consola de openMSX (F10) sirve para lo de siempre:</p>
+<pre><code>debug read memory 0xE062     ; la fase, de 0 a 7
+debug read memory 0xE060     ; las vidas
+debug write memory 0xE062 5  ; y saltar a la sexta</code></pre>
+<p>Y para las tres variables que mandan en el cuadro:</p>
+<pre><code>debug read memory 0xE000     ; la escena
+debug read memory 0xE092     ; el tramo dentro de la fase, de 0 a 9
+debug read memory 0xE091     ; las filas de casilla que se han subido</code></pre>
+<footer><p><em>Knightmare</em> -en Japon <em>Majou Densetsu</em>- lo publico Konami para MSX en 1986; su numero de catalogo es RC-739 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.</p></footer></div>

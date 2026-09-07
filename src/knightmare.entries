@@ -1,0 +1,78 @@
+# Puntos de entrada que el trazado NO puede deducir solo.
+#
+# Cada uno lleva su justificacion: si no se puede decir POR QUE es codigo, no
+# se declara.
+
+0x407e   ; INIT, la direccion que declara la cabecera "AB" de 0x4000
+0x402e   ; gancho de interrupcion H.KEYI, instalado por INIT en 0x40A6 (0xFD9A)
+!tabla 0x40ea  10   # tras el `call 406Ch` de 0x40E7; sigue en 0x40FE
+!tabla 0x56b8   8   # tras el `call 406Ch` de 0x56B5; OCHO, no diez: ver abajo
+!tabla 0x5d0c   4   # tras el `call 406Ch` de 0x5D09; sigue en 0x5D14
+!tabla 0x6909   8   # tras el `call 406Ch` de 0x6906; sigue en 0x4305
+!tabla 0x85dc  14   # tras el `call 406Ch` de 0x85D9; sigue en 0x860F
+!tabla 0x88f2   8   # tras el `call 406Ch` de 0x88EF; sigue en 0x8A95
+!tabla 0x8aa6   7   # tras el `call 406Ch` de 0x8AA3; sigue en 0x8AB4
+!tabla 0x8e44   8   # tras el `call 406Ch` de 0x8E41; sigue en 0x8E54
+!tabla 0x90ac   8   # tras el `call 406Ch` de 0x90A9; sigue en 0x90BC
+!tabla 0x9211   8   # tras el `call 406Ch` de 0x920E; sigue en 0x9221
+!tabla 0x9424   7   # tras el `call 406Ch` de 0x9421; SIETE, no tres: sus
+                    # cuatro ultimas entradas saltan hacia atras y la regla de
+                    # la entrada mas baja se queda sin apoyo. La primera que
+                    # apunta hacia delante es 0x9432 = 0x9424 + 7*2
+!tabla 0x95f7   9   # tras el `call 406Ch` de 0x95F4; nueve, no una: ver abajo
+!tabla 0x96f0   4   # tras el `call 406Ch` de 0x96ED; sigue en 0x96F8
+
+# Las dieciseis subtablas de 0x75F3, el despacho de DOS niveles: 0x75F0
+# indexa 0x75F3 con (ix+1) & 0x0F y deja la subtabla en HL, y 0x4065 la
+# indexa con (ix+0) - 1. El tamano de cada una sale de su primera entrada.
+!tabla 0x7bb5  9   # subtabla  0 de 0x75F3
+!tabla 0x7953  6   # subtabla  1 de 0x75F3
+!tabla 0x7a75  6   # subtabla  2 de 0x75F3
+!tabla 0x7ac4  7   # subtabla  3 de 0x75F3
+!tabla 0x7c25  7   # subtabla  4 de 0x75F3
+!tabla 0x7cf5 10   # subtabla  5 de 0x75F3
+!tabla 0x7d8d  6   # subtabla  6 de 0x75F3
+!tabla 0x7daf 11   # subtabla  7 de 0x75F3
+!tabla 0x7b28  7   # subtabla  8 de 0x75F3
+!tabla 0x7eab  7   # subtabla  9 de 0x75F3
+!tabla 0x7f1d  8   # subtabla 10 de 0x75F3
+!tabla 0x7fd9  6   # subtabla 11 de 0x75F3
+!tabla 0x8004  8   # subtabla 12 de 0x75F3
+!tabla 0x809c  7   # subtabla 13 de 0x75F3
+!tabla 0x8108  6   # subtabla 14 de 0x75F3
+!tabla 0x8127  9   # subtabla 15 de 0x75F3
+
+# Direcciones que se meten en la PILA para que se ejecuten al volver del
+# reparto: `ld hl,NNNN` + `push hl` justo antes de un `call 406Ch` o de un
+# salto. El trazado no las alcanza porque nunca aparecen como destino.
+0x4262   ; lo empuja 0x40DE antes del reparto de escenas; se ejecuta al volver
+0x81E7   ; lo empuja 0x81D1
+0x85F8   ; lo empuja 0x85CE
+0x900C   ; lo empuja 0x8E3D, antes del `call 406Ch` de 0x8E41
+0x9156   ; lo empuja 0x90A5, antes del `call 406Ch` de 0x90A9
+0x9317   ; lo empuja 0x920A, antes del `call 406Ch` de 0x920E
+0x96CC   ; lo empuja 0x95F0, antes del `call 406Ch` de 0x95F4
+
+# Las tres tablas que tools/tablas_despacho.py no sabe cerrar, porque su
+# primera entrada salta HACIA ATRAS a codigo que nadie mas llama y la regla de
+# "la entrada mas baja cierra la tabla" se queda sin apoyo. El tamano sale de
+# la primera entrada que apunta HACIA DELANTE, que es justo el byte siguiente a
+# la tabla:
+#   0x9549 -> su segunda entrada es 0x9557 = 0x9549 + 7*2
+#   0x9582 -> su segunda entrada es 0x9588 = 0x9582 + 3*2
+#   0x95F7 -> su primera entrada es 0x9609 = 0x95F7 + 9*2
+!tabla 0x9549  7   # tras el `call 406Ch` de 0x9546
+!tabla 0x9582  3   # tras el `call 406Ch` de 0x957F
+
+# La tabla de 0x56B8 tiene OCHO entradas, no diez. Las dos que sobraban -0x6121
+# y 0x7EE0- no son punteros: son los bytes `21 61 E0 7E` de la instruccion
+# `ld hl,0E061h` que arranca en 0x56C8, y por eso 0x7EE0 salia como etiqueta
+# que no cae en ninguna posicion emitida. Los diez bytes que van de 0x56C8 a
+# 0x56D2 encajan exactos con esa rutina.
+#
+# Y a 0x56C8 no salta nadie de este cartucho: la llama el KONAMI GAME MASTER
+# desde la otra ranura. Su cabecera de 0x4010 la declara en 0x4023 como la
+# rutina a la que llamar por CALSLT tras escribir la fase pedida en (0xE061)
+# -ver GAMEMASTER_DISAM 0x5561-, y lo que hace es justo eso: pasar la fase de
+# (0xE061) al indice interno de (0xE062).
+0x56c8   ; la llama el Game Master entre ranuras; lo declara la cabecera de 0x4023

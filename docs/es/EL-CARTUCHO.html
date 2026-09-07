@@ -1,0 +1,125 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El cartucho — Knightmare (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html" style=color:var(--tinta)>El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CARTRIDGE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-cartucho">El cartucho</h1>
+<p><b>Knightmare</b>, Konami RC-739, 1986. Son 32.768 bytes que se ven en las <b>paginas 1 y 2</b> del MSX, o sea de <code>0x4000</code> a <code>0xBFFF</code>.</p>
+<pre><code>sha256  6e7a8a2d2fadc078ec9043deee804cfa5efcf2eb64f2fb6291a5161776220cf6</code></pre>
+<h2 id="las-dos-cabeceras">Las dos cabeceras</h2>
+<p>En <code>0x4000</code> va la de siempre: <code>&quot;AB&quot;</code>, la direccion de INIT (<code>0x407E</code>) y STATEMENT, DEVICE y TEXT a cero.</p>
+<p>Y en <code>0x4010</code> va <b>una segunda</b>, que este cartucho no lee: la lee el <b>Konami Game Master</b>, el cartucho de trucos de la casa, desde la otra ranura. Son <code>&quot;CD&quot; 07 39</code>, o sea el <code>0x07</code> de los RC-7xx y el <code>0x39</code> de RC-739. El <code>&quot;CD&quot;</code> es el marcador de los cartuchos de 1986-87; los de 1985 llevan <code>&quot;AB&quot;</code>.</p>
+<p>Detras van veintiun bytes que se reparten con un byte de banderas —cada bit a cero quiere decir que el campo viene—, y el reparto <b>cuadra byte a byte</b>: acaba en <code>0x4024</code>, justo antes de donde vuelve a haber codigo. Con banderas <code>0x20</code> sale esto:</p>
+<table><tr><th>campo</th><th>vale</th><th>que es</th></tr><tr><td>escena</td><td><code>0xE000</code></td><td>la variable de escena</td></tr><tr><td>cuando</td><td><code>4</code></td><td>la escena en la que se aplican los trucos</td></tr><tr><td>fase</td><td><code>0xE061</code></td><td>la fase, en BCD</td></tr><tr><td>cuantas</td><td><code>8</code></td><td><b>ocho fases</b></td></tr><tr><td>vidas</td><td><code>0xE060</code></td><td></td></tr><tr><td>datos</td><td><code>0xE053</code></td><td>el record</td></tr><tr><td>marcador</td><td><code>0xE056</code></td><td>la puntuacion</td></tr><tr><td>—</td><td>—</td><td><em>no hay marcador de segundo jugador</em></td></tr><tr><td>modo</td><td><code>0xE002</code></td><td>los bits de modo</td></tr><tr><td>rutina</td><td><code>0x56C8</code></td><td><b>una rutina de este cartucho</b></td></tr></table>
+<p>Esa ultima es lo interesante: <code>0x56C8</code> son diez bytes a los que <b>no llama nadie de dentro</b>. Lo que hacen es pasar la fase que el Game Master escribe en <code>(0xE061)</code> al indice interno de <code>(0xE062)</code>, restandole uno en BCD.</p>
+<h2 id="el-vdp-al-reves-de-lo-corriente">El VDP, al reves de lo corriente</h2>
+<p>La tabla de registros esta en <code>0x44C5</code>, ocho bytes de R0 a R7:</p>
+<pre><code>02 E2 0E 7F 07 76 03 E4</code></pre>
+<p>R3 y R4 <b>no son direcciones, son base y mascara</b>, y aqui dan la vuelta a la geometria de siempre:</p>
+<table><tr><th>tabla</th><th>donde</th><th>tamano</th></tr><tr><td>color</td><td><code>0x0000</code></td><td>tres bancos de <code>0x800</code></td></tr><tr><td>patrones de sprite</td><td><code>0x1800</code></td><td>64 de 32 bytes</td></tr><tr><td>patrones</td><td><code>0x2000</code></td><td>tres bancos de <code>0x800</code></td></tr><tr><td>nombres</td><td><code>0x3800</code></td><td>768 casillas</td></tr><tr><td>atributos de sprite</td><td><code>0x3B00</code></td><td>32 de cuatro bytes</td></tr></table>
+<p>O sea que el color esta donde uno espera los patrones y al reves. Un <code>ld hl,00008h</code> en este cartucho <b>no apunta a patrones</b>.</p>
+<p>El registro 7 de la tabla dice <code>0xE4</code> —fondo azul oscuro—, pero eso solo vale hasta que empieza el juego: el cartucho lo cambia a <code>0xE0</code> con <code>pon_registro_7</code>, y el nibble bajo pasa a 0, que es <b>negro</b>.</p>
+<h2 id="el-mapa-de-memoria">El mapa de memoria</h2>
+<pre><code>0xE000  escena          0xE001  subescena       0xE002  bits de modo
+0xE003  contador de cuadros                     0xE004  espera
+0xE009  lo que hay pulsado
+0xE010  0xE01E  0xE02C  las tres voces del PSG, catorce bytes cada una
+0xE053  record (3 en BCD)                       0xE056  puntuacion (3)
+0xE060  vidas           0xE061  fase en BCD     0xE062  fase interna (0-7)
+0xE063  umbral de la vida extra
+0xE088  el mapa de bits del tramo               0xE091  filas subidas
+0xE092  tramo (0-9)     0xE093  lista de tramos 0xE095  fin del mapa de bits
+0xE0A0  los dos generadores de oleadas, 0x10 cada uno
+0xE100  los siete enemigos, 0x20 cada uno
+0xE200  los ocho disparos del enemigo, 0x10 cada uno
+0xE320  la sombra de la tabla de atributos de sprite
+0xE3D0  el jefe
+0xE4F0  los ocho bichos sembrados por la fase, 0x10 cada uno
+0xE600  el muneco       0xE620  las cuatro ranuras de disparo
+0xE820  el buffer de casillas: 28 filas de 32</code></pre>
+<h2 id="la-maquina-no-cambia-nada">La maquina no cambia nada</h2>
+<p>El cartucho lee de todo lo que hay por debajo de <code>0x4000</code> <b>una sola direccion: <code>0x0007</code></b>, que es el puerto de datos del VDP, y llama a diecisiete rutinas de la BIOS: VDP, PSG, teclado y ranuras. <b>Nunca toca <code>0x002B</code>, <code>0x002C</code> ni <code>0x002D</code></b>, que son los bytes que dicen el juego de caracteres, el formato de fecha y si la maquina va a 50 o a 60 Hz.</p>
+<p>Comprobado ademas volcando: la VRAM del titulo en una maquina internacional y en una japonesa da <b>0 bytes distintos de 16.384</b>. El rotulo en kanji es el mismo en las dos.</p>
+<h2 id="la-marca-oculta">La marca oculta</h2>
+<p>Los ultimos trece bytes del cartucho, de <code>0xBFF3</code> a <code>0xBFFF</code>, son la marca de la casa: マジョウデンセツ —<em>Majou Densetsu</em>— escrito del reves en katakana, su longitud (<code>0x0A</code>), el <code>0x39</code> de RC-739 y un <code>0xAA</code> que cierra. La descubrio <b>Manuel Pazos</b>.</p>
+<footer><p><em>Knightmare</em> -en Japon <em>Majou Densetsu</em>- lo publico Konami para MSX en 1986; su numero de catalogo es RC-739 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.</p></footer></div>
