@@ -74,6 +74,15 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 .aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
   padding:1rem 1.2rem;max-width:900px;border-radius:4px}
 .aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
 .galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:1.5rem;margin:1.5rem 0}
 .galeria figure{margin:0}

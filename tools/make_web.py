@@ -60,7 +60,7 @@ TXT = {
                "Cartucho <b>RC-739</b>, 32 KB",
                "MSX1 - <b>paginas 1 y 2</b>", "Volcado <b>6e7a8a2d...</b>"],
         nav=[("#numbers", "Las cifras"), ("#findings", "Hallazgos"),
-             ("#screens", "Lo que dibuja")],
+             ("#stages", "Las ocho fases"), ("#screens", "Lo que dibuja")],
         docnav=[("EMPEZAR.html", "Empezar"), ("EL-JUEGO.html", "El juego"),
                 ("EL-CARTUCHO.html", "El cartucho"),
                 ("EL-CODIGO.html", "El codigo"),
@@ -69,6 +69,11 @@ TXT = {
                 ("PREGUNTAS-ABIERTAS.html", "Preguntas abiertas")],
         otro=("../", "In English"),
         h_num="El cartucho en cifras", h_find="Lo que aparecio al desmontarlo",
+        h_fas="Las ocho fases, enteras",
+        nota_fas="Cada una es una tira de 256 x 1952 pixeles, dibujada desde "
+                 "la ROM bloque a bloque; ninguna es una captura. Se leen de "
+                 "abajo arriba, que es como se juegan. Arrastra de lado para "
+                 "ver las ocho.",
         h_scr="Lo que el cartucho dibuja",
         cifras=[("100 %", "del binario explicado"),
                 (str(RUTINAS), "bloques de codigo medidos"),
@@ -105,7 +110,7 @@ TXT = {
                "An <b>RC-739</b> 32 KB cartridge",
                "MSX1 - <b>pages 1 and 2</b>", "Dump <b>6e7a8a2d...</b>"],
         nav=[("#numbers", "The numbers"), ("#findings", "What turned up"),
-             ("#screens", "What it draws")],
+             ("#stages", "The eight stages"), ("#screens", "What it draws")],
         docnav=[("GETTING-STARTED.html", "Getting started"),
                 ("THE-GAME.html", "The game"),
                 ("THE-CARTRIDGE.html", "The cartridge"),
@@ -116,6 +121,11 @@ TXT = {
         otro=("es/", "En castellano"),
         h_num="The cartridge in numbers",
         h_find="What turned up when we took it apart",
+        h_fas="The eight stages, in full",
+        nota_fas="Each one is a 256 x 1952 pixel strip, drawn from the ROM "
+                 "block by block; not one is a capture. They read bottom to "
+                 "top, which is how they are played. Drag sideways to see all "
+                 "eight.",
         h_scr="What the cartridge draws",
         cifras=[("100%", "of the binary explained"),
                 (str(RUTINAS), "code blocks measured"),
@@ -132,7 +142,7 @@ TXT = {
 
 # El contenido propio de este cartucho vive aparte, en contenido_web.py:
 # asi el generador no lleva dentro ni un texto del juego anterior.
-from contenido_web import HALLAZGOS, GALERIA        # noqa: E402
+from contenido_web import HALLAZGOS, GALERIA, FASES  # noqa: E402
 
 
 def img64(ruta):
@@ -175,6 +185,16 @@ def main(argv):
         pie = es if idioma == "es" else en
         imgs += (f'<figure><img src="{img64(ruta)}" alt="{pie}">'
                  f'<figcaption>{pie}</figcaption></figure>')
+    # las ocho fases, en fila y a tamano real
+    tiras = ""
+    for fich, es, en in FASES:
+        ruta = os.path.join(imgdir, fich)
+        if not os.path.exists(ruta):
+            faltan.append(fich)
+            continue
+        pie = es if idioma == "es" else en
+        tiras += (f'<figure><img src="{img64(ruta)}" alt="{pie}">'
+                  f'<figcaption>{pie}</figcaption></figure>')
     if faltan:
         print("  (faltan %d imagenes: %s)" % (len(faltan), " ".join(faltan)))
 
@@ -195,6 +215,11 @@ def main(argv):
   <div class="cifras">{cifras}</div>
 </section>
 <section id="findings"><h2>{t['h_find']}</h2>{halls}</section>
+<section id="stages">
+  <h2>{t['h_fas']}</h2>
+  <p class="n">{t['nota_fas']}</p>
+  <div class="fases">{tiras}</div>
+</section>
 <section id="screens">
   <h2>{t['h_scr']}</h2>
   <p class="n">{t['nota_scr']}</p>

@@ -129,6 +129,29 @@ ultimas se animan: `0x636D` les saca cuatro fotogramas con un `and 003h`.*
 *Los 37 patrones fijos que `0x54BE` sube al empezar cada fase: las armas, los
 disparos y los objetos. Iguales en las ocho fases.*
 
+## Los jefes que se declaran con una tabla
+
+Dos de los seis jefes se montan con una **tabla entera de sprites**, cada
+entrada `[dy][dx][patron][color]`: el de la fase 1 con siete (`0x902D`) y el de
+la fase 3 con nueve (`0x9338`). Y el patron no apunta al banco fijo: antes de
+pintarse, cada jefe **sube los suyos** —`0x8E57` y `0x9224`, con
+`descomprime_desde_la_palabra`, que lleva el destino dentro del bloque— y los
+dos van a `0x1B00`, que es justo el patron `0x60` con el que empiezan las dos
+tablas. Sin ese volcado salen las armas del banco fijo.
+
+![El jefe de la fase 1](../imagenes/jefe_fase1.png)
+![El jefe de la fase 3](../imagenes/jefe_fase3.png)
+
+*El de la fase 1, con sus once patrones, y el de la fase 3, con sus diecisiete.*
+
+Los otros cuatro **no estan**: el de la fase 2 tiene tres juegos de seis sprites
+y ademas `0x9186` le pega la cola aparte de la tabla, y los de las fases 4 a 8
+no se han localizado. Queda pendiente.
+
+![Los disparos](../imagenes/disparos.png)
+
+*Los siete fotogramas de salida del disparo, de la tabla de `0x8250`.*
+
 ## El marcador y el reloj del jefe
 
 ![La primera pantalla de la fase 1](../imagenes/pantalla_fase1.png)

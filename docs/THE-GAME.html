@@ -74,6 +74,15 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 .aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
   padding:1rem 1.2rem;max-width:900px;border-radius:4px}
 .aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
 .galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:1.5rem;margin:1.5rem 0}
 .galeria figure{margin:0}
@@ -119,6 +128,13 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p><em>The seven weapons of the table at <code>0x63FB</code>, a <code>[pattern][colour]</code> pair each. Only the last two animate: <code>0x636D</code> gives them four frames with an <code>and 003h</code>.</em></p>
 <p><img src="imagenes/sprites_fase.png?v=3e7633f4" alt="The weapons and items"></p>
 <p><em>The 37 fixed patterns <code>0x54BE</code> uploads at the start of every stage: the weapons, the shots and the items. The same in all eight.</em></p>
+<h2 id="the-bosses-that-come-with-a-table">The bosses that come with a table</h2>
+<p>Two of the six bosses are assembled from a <b>whole table of sprites</b>, each entry <code>[dy][dx][pattern][colour]</code>: the stage 1 one with seven (<code>0x902D</code>) and the stage 3 one with nine (<code>0x9338</code>). And the pattern does not point into the fixed bank: before painting itself, each boss <b>uploads its own</b> — <code>0x8E57</code> and <code>0x9224</code>, with <code>descomprime_desde_la_palabra</code>, which carries the destination inside the block — and both go to <code>0x1B00</code>, exactly the pattern <code>0x60</code> both tables start from. Without that upload you get the fixed bank&#x27;s weapons.</p>
+<p><img src="imagenes/jefe_fase1.png?v=74b01bad" alt="The stage 1 boss"> <img src="imagenes/jefe_fase3.png?v=57e6526f" alt="The stage 3 boss"></p>
+<p><em>The stage 1 one, with its eleven patterns, and the stage 3 one, with its seventeen.</em></p>
+<p>The other four are <b>not here</b>: the stage 2 boss has three sets of six sprites and <code>0x9186</code> adds its tail outside the table, and the stage 4 to 8 ones have not been located. Still open.</p>
+<p><img src="imagenes/disparos.png?v=e488e3ac" alt="The shots"></p>
+<p><em>The seven frames of a shot leaving, from the table at <code>0x8250</code>.</em></p>
 <h2 id="the-scoreboard-and-the-boss-clock">The scoreboard and the boss clock</h2>
 <p><img src="imagenes/pantalla_fase1.png?v=a395543c" alt="The first screen of stage 1"></p>
 <p><em>Exactly as it comes out of the emulator: the byte-for-byte check gives zero differences.</em></p>

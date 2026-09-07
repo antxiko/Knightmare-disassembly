@@ -123,7 +123,62 @@ HALLAZGOS = {
 }
 
 # (fichero, pie en castellano, pie en ingles)
+# LAS OCHO FASES van APARTE, en su propia seccion y en fila: son tiras de
+# 256 x 1952, y metidas en la rejilla de la galeria salen como churretes de
+# 280 px de ancho por 2135 de alto. Aqui van a tamano real, una al lado de
+# otra y en orden, con barra horizontal.
+FASES = [
+    ("fase_1.png",
+     "<b>Fase 1.</b> La tira entera, en vertical: 61 bandas de cuatro filas, "
+     "montadas bloque a bloque. Se lee de abajo arriba, que es como se juega, "
+     "y la banda de arriba es la puerta del jefe. Los rios y los puentes NO "
+     "son casillas de la fase: los sube <code>monta_el_marcador</code> "
+     "(0x565C), y son los mismos en las ocho.",
+     "<b>Stage 1.</b> The whole strip, top to bottom: 61 bands of four rows, "
+     "assembled block by block. Read it bottom to top, which is how it is "
+     "played, and the top band is the boss gate. The rivers and the bridges "
+     "are NOT stage tiles: <code>monta_el_marcador</code> (0x565C) uploads "
+     "them, the same in all eight."),
+    ("fase_2.png",
+     "<b>Fase 2.</b> El desierto. Trae 61 casillas propias, menos que "
+     "ninguna otra.",
+     "<b>Stage 2.</b> The desert. It carries 61 tiles of its own, fewer than "
+     "any other."),
+    ("fase_3.png",
+     "<b>Fase 3.</b> Las mismas casillas que la 1, pasadas por el traductor "
+     "de <code>0x443B</code> con <code>(0xE661)</code> a uno.",
+     "<b>Stage 3.</b> The same tiles as stage 1, run through the translator "
+     "at <code>0x443B</code> with <code>(0xE661)</code> set to one."),
+    ("fase_4.png",
+     "<b>Fase 4.</b> Otra vez las casillas de la 1. Lo unico que cambia es la "
+     "paleta: por eso los muros son rosa y no gris.",
+     "<b>Stage 4.</b> Stage 1's tiles again. All that changes is the palette: "
+     "that is why the walls are pink, not grey."),
+    ("fase_5.png",
+     "<b>Fase 5.</b> De ladrillo. La 5 y la 6 comparten casillas y color y "
+     "solo se diferencian en el mapa.",
+     "<b>Stage 5.</b> Brickwork. Stages 5 and 6 share tiles and colour and "
+     "differ only in the map."),
+    ("fase_6.png",
+     "<b>Fase 6.</b> La gemela de la 5, con otro mapa.",
+     "<b>Stage 6.</b> Stage 5's twin, with a different map."),
+    ("fase_7.png",
+     "<b>Fase 7.</b> La del agua, y la unica que carga nueve casillas de mas, "
+     "en <code>0x2470</code> (0x553E).",
+     "<b>Stage 7.</b> The water one, and the only one that loads nine extra "
+     "tiles, at <code>0x2470</code> (0x553E)."),
+    ("fase_8.png",
+     "<b>Fase 8.</b> El castillo, con el jefe final esperando en la banda de "
+     "arriba.",
+     "<b>Stage 8.</b> The castle, with the final boss waiting on the top "
+     "band."),
+
+]
+
 GALERIA = [
+    # EL ORDEN IMPORTA: primero las pantallas, luego LAS OCHO FASES SEGUIDAS y
+    # en orden, y detras los sprites. Mezclar una lamina de sprites entre dos
+    # fases deja la galeria ilegible.
     ("titulo.png",
      "La pantalla del titulo, montada ejecutando los pasos de "
      "<code>monta_el_titulo</code> (0x47BA). El rotulo grande son 33 casillas "
@@ -136,26 +191,13 @@ GALERIA = [
      "sus catorce pasos.",
      "The KONAMI banner of the intro, at the place it reaches after its "
      "fourteen steps."),
-    ("fase_1.png",
-     "La fase 1 entera, en vertical: 61 bandas de cuatro filas, montadas "
-     "bloque a bloque desde los codigos de <code>0x9E51</code>. Los rios y "
-     "los puentes NO son casillas de la fase: vienen del bloque que sube "
-     "<code>monta_el_marcador</code> (0x565C), y son los mismos en las ocho.",
-     "Stage 1 in full, top to bottom: 61 bands of four rows, assembled block "
-     "by block from the codes at <code>0x9E51</code>. The rivers and the "
-     "bridges are NOT stage tiles: they come from the block uploaded by "
-     "<code>monta_el_marcador</code> (0x565C), the same in all eight."),
-    ("fase_4.png",
-     "La fase 4. Usa las MISMAS casillas que la 1, pasadas por el traductor "
-     "de <code>0x443B</code>: por eso los muros son rosa y no gris.",
-     "Stage 4. It uses the SAME tiles as stage 1, run through the translator "
-     "at <code>0x443B</code>: that is why the walls are pink, not grey."),
-    ("fase_8.png",
-     "La fase 8, el castillo, con el jefe final esperando en la banda de "
-     "arriba. Las OCHO estan enteras, y a tamano real, en la pagina "
-     "<em>El juego</em>.",
-     "Stage 8, the castle, with the final boss waiting on the top band. ALL "
-     "EIGHT are on the <em>The game</em> page, in full and at full size."),
+    ("pantalla_fase1.png",
+     "La primera pantalla de la fase 1 con su marcador, tal como sale del "
+     "emulador: el cotejo byte a byte da CERO diferencias.",
+     "The first screen of stage 1 with its scoreboard, exactly as it comes out "
+     "of the emulator: the byte-for-byte check gives ZERO differences."),
+
+    # ---- Y AHORA LOS SPRITES ----
     ("jugador.png",
      "Los doce fotogramas de Popolon. Son TRES sprites -dos del fotograma y "
      "uno del banco de la fase- y cada fotograma ocupa 64 bytes justos. Los "
@@ -163,6 +205,16 @@ GALERIA = [
      "Popolon's twelve frames. He is THREE sprites -two from the frame and one "
      "from the stage bank- and each frame takes exactly 64 bytes. The last "
      "four are the explosion."),
+    ("jefe_fase1.png",
+     "El jefe de la fase 1, montado con los SIETE sprites que declara la "
+     "tabla de <code>0x902D</code>, cada uno con su desplazamiento y su "
+     "color.",
+     "The stage 1 boss, assembled from the SEVEN sprites declared by the "
+     "table at <code>0x902D</code>, each with its own offset and colour."),
+    ("jefe_fase3.png",
+     "Y el de la fase 3, que son NUEVE, de la tabla de <code>0x9338</code>.",
+     "And the stage 3 one, which is NINE of them, from the table at "
+     "<code>0x9338</code>."),
     ("banco_de_enemigos.png",
      "Los dieciseis tipos de bicho, uno por bloque de <code>0xA993</code>. No "
      "caben a la vez: el cartucho los recarga en TRES ranuras de la hoja de "
@@ -186,14 +238,18 @@ GALERIA = [
      "The seven weapons of the table at <code>0x63FB</code>, a "
      "<code>[pattern][colour]</code> pair each. Only the last two animate, "
      "with four frames apiece."),
+    ("disparos.png",
+     "Los siete fotogramas de salida del disparo, de la tabla de "
+     "<code>0x8250</code>, que <code>0x8231</code> indexa con la cuenta.",
+     "The seven frames of a shot leaving, from the table at "
+     "<code>0x8250</code>, which <code>0x8231</code> indexes with the count."),
     ("sprites_fase.png",
-     "Los 37 patrones fijos de cada fase: las armas, los disparos y los "
-     "objetos. Iguales en las ocho.",
-     "The 37 fixed patterns of every stage: the weapons, the shots and the "
-     "items. The same in all eight."),
-    ("pantalla_fase1.png",
-     "La primera pantalla de la fase 1 con su marcador, tal como sale del "
-     "emulador: el cotejo byte a byte da CERO diferencias.",
-     "The first screen of stage 1 with its scoreboard, exactly as it comes out "
-     "of the emulator: the byte-for-byte check gives ZERO differences."),
+     "Y la materia prima: los 37 patrones fijos que <code>0x54BE</code> sube "
+     "al empezar cada fase -las armas, los disparos y los objetos-. Van en "
+     "blanco porque un patron de sprite NO tiene color propio: se lo pone "
+     "cada tabla que lo usa, y ahi arriba estan los que lo tienen.",
+     "And the raw material: the 37 fixed patterns <code>0x54BE</code> uploads "
+     "at the start of every stage -the weapons, the shots and the items-. They "
+     "are white because a sprite pattern has NO colour of its own: whichever "
+     "table uses it supplies one, and the ones that have it are above."),
 ]

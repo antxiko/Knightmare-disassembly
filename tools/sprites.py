@@ -206,6 +206,7 @@ def dibuja_al_jugador(rom, v_fase, datos, atributos):
 # 0x77BE, esta a 76 bytes del principio de la tabla.
 ENEMIGOS = 0x7772
 ARMAS = 0x63FB                  # pareja [patron][color] por arma, que lee 0x63E9
+TIROS = 0x8250                  # pareja [patron][color] por fotograma de salida (0x8231)
 
 # LOS DIECISEIS TIPOS DE BICHO, cada uno con SU bloque de patrones.
 #
@@ -338,6 +339,35 @@ def dibuja_un_enemigo(rom, v, p, base=0):
     return px
 
 
+def monta_sprites(rom, v, tabla, cuantos, base=0):
+    """Un monton de sprites [dy][dx][patron][color] montado en una sola figura.
+
+    Es lo mismo que hace `dibuja_un_enemigo` con sus dos, pero con los que
+    haga falta: los jefes de la fase 1 y de la 3 se declaran asi, con siete y
+    nueve sprites. Se pintan del ultimo al primero por la prioridad de plano.
+    """
+    trozos = []
+    for k in range(cuantos):
+        p = tabla + 4 * k
+        dy, dx = rom.b(p), rom.b(p + 1)
+        trozos.append((dy - 256 if dy > 127 else dy,
+                       dx - 256 if dx > 127 else dx,
+                       ((rom.b(p + 2) + base) & 0xFF) >> 2, rom.b(p + 3)))
+    y0 = min(t[0] for t in trozos)
+    x0 = min(t[1] for t in trozos)
+    px = [[None] * (max(t[1] for t in trozos) - x0 + 16)
+          for _ in range(max(t[0] for t in trozos) - y0 + 16)]
+    for dy, dx, bloque, col in reversed(trozos):
+        if col & 0x0F == 0:
+            continue
+        d = patron(v, bloque, col)
+        for f in range(16):
+            for c in range(16):
+                if d[f][c] is not None:
+                    px[dy - y0 + f][dx - x0 + c] = d[f][c]
+    return px
+
+
 def rejilla(dibujos, cols, esc=3, sep=2):
     alto = max(len(d) for d in dibujos)
     ancho = max(len(d[0]) for d in dibujos)
@@ -446,6 +476,45 @@ def main():
     png(w4, h4, px4, fn4)
     print("  %s  %d x %d  (las siete armas de 0x63FB; las dos ultimas, con sus"
           " cuatro fotogramas)" % (fn4, w4, h4))
+
+    # LOS JEFES que el cartucho declara con una tabla entera de sprites:
+    # 0x902D son SIETE [dy][dx][patron][color] -el de la fase 1- y 0x9338,
+    # NUEVE -el de la fase 3-. El patron les va absoluto, pero NO al banco
+    # fijo: antes de pintarse, cada jefe SUBE LOS SUYOS -0x8E57 y 0x9224, con
+    # `descomprime_desde_la_palabra`, que lleva el destino dentro del bloque- y
+    # los dos van a 0x1B00, que es justo el patron 0x60 con el que empiezan las
+    # dos tablas. Sin ese volcado salen las armas del banco fijo, que es lo que
+    # hay en 0x1B00 el resto de la partida.
+    # SOLO ESTOS DOS. El de la fase 2 (0x9156) tiene TRES juegos de seis
+    # sprites y ademas 0x9186 le pega la cola 0x34 a la derecha, aparte de la
+    # tabla: montado solo con los seis sale un trozo suelto, y no se publica un
+    # dibujo que no se ha entendido. Los de las fases 4 a 8 tampoco se han
+    # localizado. Queda pendiente.
+    for nombre, tabla, cuantos, guion, que in (
+            ("jefe_fase1", 0x902D, 7, 0xAD69,
+             "el jefe de la fase 1, siete sprites, con sus once patrones"),
+            ("jefe_fase3", 0x9338, 9, 0xAEA6,
+             "el jefe de la fase 3, nueve sprites, con sus diecisiete")):
+        v = bytearray(estaticos)
+        if guion is not None:
+            b = descomprime(rom, guion, con_palabra=True)
+            i = rom.w(guion) - PATRONES
+            v[i:i + len(b)] = b
+        d = monta_sprites(rom, v, tabla, cuantos)
+        w5, h5, px5 = rejilla([d], 1, esc=3, sep=2)
+        fn5 = os.path.join(salida, nombre + ".png")
+        png(w5, h5, px5, fn5)
+        print("  %s  %d x %d  (%s)" % (fn5, w5, h5, que))
+
+    # LOS DISPAROS DEL MUNECO: pareja [patron][color] por fotograma de salida,
+    # de la tabla de 0x8250, que 0x8231 indexa con la cuenta
+    tiros = [patron(estaticos, rom.b(TIROS + 2 * k) >> 2, rom.b(TIROS + 2 * k + 1))
+             for k in range(7)]
+    w6, h6, px6 = rejilla(tiros, 7)
+    fn6 = os.path.join(salida, "disparos.png")
+    png(w6, h6, px6, fn6)
+    print("  %s  %d x %d  (los siete fotogramas de salida del disparo, 0x8250)"
+          % (fn6, w6, h6))
 
     # y los dieciseis tipos de un vistazo: un fotograma de cada uno
     banco = []

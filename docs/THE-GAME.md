@@ -129,6 +129,30 @@ Only the last two animate: `0x636D` gives them four frames with an `and 003h`.*
 *The 37 fixed patterns `0x54BE` uploads at the start of every stage: the
 weapons, the shots and the items. The same in all eight.*
 
+## The bosses that come with a table
+
+Two of the six bosses are assembled from a **whole table of sprites**, each
+entry `[dy][dx][pattern][colour]`: the stage 1 one with seven (`0x902D`) and the
+stage 3 one with nine (`0x9338`). And the pattern does not point into the fixed
+bank: before painting itself, each boss **uploads its own** — `0x8E57` and
+`0x9224`, with `descomprime_desde_la_palabra`, which carries the destination
+inside the block — and both go to `0x1B00`, exactly the pattern `0x60` both
+tables start from. Without that upload you get the fixed bank's weapons.
+
+![The stage 1 boss](imagenes/jefe_fase1.png)
+![The stage 3 boss](imagenes/jefe_fase3.png)
+
+*The stage 1 one, with its eleven patterns, and the stage 3 one, with its
+seventeen.*
+
+The other four are **not here**: the stage 2 boss has three sets of six sprites
+and `0x9186` adds its tail outside the table, and the stage 4 to 8 ones have not
+been located. Still open.
+
+![The shots](imagenes/disparos.png)
+
+*The seven frames of a shot leaving, from the table at `0x8250`.*
+
 ## The scoreboard and the boss clock
 
 ![The first screen of stage 1](imagenes/pantalla_fase1.png)

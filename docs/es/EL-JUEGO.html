@@ -74,6 +74,15 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 .aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
   padding:1rem 1.2rem;max-width:900px;border-radius:4px}
 .aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
 .galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:1.5rem;margin:1.5rem 0}
 .galeria figure{margin:0}
@@ -119,6 +128,13 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p><em>Las siete armas de la tabla de <code>0x63FB</code>, pareja <code>[patron][color]</code>. Solo las dos ultimas se animan: <code>0x636D</code> les saca cuatro fotogramas con un <code>and 003h</code>.</em></p>
 <p><img src="../imagenes/sprites_fase.png?v=3e7633f4" alt="Las armas y los objetos"></p>
 <p><em>Los 37 patrones fijos que <code>0x54BE</code> sube al empezar cada fase: las armas, los disparos y los objetos. Iguales en las ocho fases.</em></p>
+<h2 id="los-jefes-que-se-declaran-con-una-tabla">Los jefes que se declaran con una tabla</h2>
+<p>Dos de los seis jefes se montan con una <b>tabla entera de sprites</b>, cada entrada <code>[dy][dx][patron][color]</code>: el de la fase 1 con siete (<code>0x902D</code>) y el de la fase 3 con nueve (<code>0x9338</code>). Y el patron no apunta al banco fijo: antes de pintarse, cada jefe <b>sube los suyos</b> —<code>0x8E57</code> y <code>0x9224</code>, con <code>descomprime_desde_la_palabra</code>, que lleva el destino dentro del bloque— y los dos van a <code>0x1B00</code>, que es justo el patron <code>0x60</code> con el que empiezan las dos tablas. Sin ese volcado salen las armas del banco fijo.</p>
+<p><img src="../imagenes/jefe_fase1.png?v=74b01bad" alt="El jefe de la fase 1"> <img src="../imagenes/jefe_fase3.png?v=57e6526f" alt="El jefe de la fase 3"></p>
+<p><em>El de la fase 1, con sus once patrones, y el de la fase 3, con sus diecisiete.</em></p>
+<p>Los otros cuatro <b>no estan</b>: el de la fase 2 tiene tres juegos de seis sprites y ademas <code>0x9186</code> le pega la cola aparte de la tabla, y los de las fases 4 a 8 no se han localizado. Queda pendiente.</p>
+<p><img src="../imagenes/disparos.png?v=e488e3ac" alt="Los disparos"></p>
+<p><em>Los siete fotogramas de salida del disparo, de la tabla de <code>0x8250</code>.</em></p>
 <h2 id="el-marcador-y-el-reloj-del-jefe">El marcador y el reloj del jefe</h2>
 <p><img src="../imagenes/pantalla_fase1.png?v=a395543c" alt="La primera pantalla de la fase 1"></p>
 <p><em>Tal como sale del emulador: el cotejo byte a byte da cero diferencias.</em></p>
