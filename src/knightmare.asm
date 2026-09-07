@@ -1265,9 +1265,17 @@ L_499D:
 	jr sigue_el_guion		;49a0
 
 ; ----------------------------------------------------------------------
-; ENCENDER O APAGAR UNA VOZ EN EL MEZCLADOR
+; EL MEZCLADOR. OJO: los bits que toca son el 3, el 4 y el 5, o sea los
+; del RUIDO, no los del tono. La copia del registro 7 (0xE03A) arranca a
+; cero con el borrado de 0x40AC, y este es el UNICO sitio del cartucho
+; que escribe el registro 7, asi que el tono de las tres voces queda
+; abierto de principio a fin: para callar una voz se le baja el volumen,
+; no se cierra aqui.
+; Y el sentido de D es el contrario del que parece: el `dec d` manda al
+; `or e` con D=1, y el registro 7 del PSG va al reves, asi que con D=1
+; el bit se PONE y el ruido se APAGA.
 ; ----------------------------------------------------------------------
-mezclador:
+enciende_o_apaga_el_ruido:
 	ld a,(0e03ah)		;49a2   ; la copia del registro 7
 	ld e,a			;49a5
 	ld a,c			;49a6   ; c es 1, 3 o 5: la voz
@@ -1275,16 +1283,16 @@ mezclador:
 	jr z,L_49AC		;49a9
 	dec a			;49ab
 L_49AC:
-	rlca			;49ac   ; tres rotaciones dejan el bit de esa voz en su sitio del registro 7
+	rlca			;49ac   ; tres rotaciones dejan 0x08, 0x10 o 0x20, los bits de RUIDO
 	rlca			;49ad
 	rlca			;49ae
-	dec d			;49af   ; con d a cero se apaga
+	dec d			;49af   ; con D a uno...
 	jr z,L_49B6		;49b0
-	cpl			;49b2   ; y se quita el bit
+	cpl			;49b2   ; el bit se quita y el ruido suena
 	and e			;49b3
 	jr escribe_el_mezclador		;49b4
 L_49B6:
-	or e			;49b6   ; con d a uno se enciende
+	or e			;49b6   ; ...el bit se pone y el ruido calla
 escribe_el_mezclador:
 	ld (0e03ah),a		;49b7
 	ld e,a			;49ba
@@ -1321,7 +1329,7 @@ L_49E1:
 calla_la_voz_si_lo_pide_la_orden:
 	bit 6,a		;49e9
 	ld d,001h		;49eb
-	call z,mezclador		;49ed
+	call z,enciende_o_apaga_el_ruido		;49ed
 sigue_el_guion:
 	ld a,(ix+002h)		;49f0   ; el estado de la voz
 	or a			;49f3
@@ -1347,7 +1355,7 @@ paso_del_guion:
 L_4A1E:
 	ld a,(hl)			;4a1e
 	and 0f0h		;4a1f
-	cp 010h		;4a21   ; 0x1n fija el ruido: el registro 6 del PSG y la voz metida en el mezclador
+	cp 010h		;4a21   ; 0x1n fija el ruido: el registro 6 del PSG y el ruido abierto en el mezclador
 	jr nz,L_4A35		;4a23
 	ld a,(hl)			;4a25   ; 0x1n: el ruido
 	and 00fh		;4a26
@@ -1356,7 +1364,7 @@ L_4A1E:
 	ld a,006h		;4a2a
 	call 00093h		;4a2c   ; BIOS WRTPSG - Writes data to PSG-register | el registro 6 del PSG es el periodo del ruido
 	ld d,000h		;4a2f
-	call mezclador		;4a31   ; y la voz entra en el mezclador
+	call enciende_o_apaga_el_ruido		;4a31   ; y con D=0 se abre el ruido de esa voz en el mezclador
 	inc hl			;4a34
 L_4A35:
 	ld a,(hl)			;4a35
@@ -1393,7 +1401,7 @@ L_4A49:
 ; ----------------------------------------------------------------------
 apaga_la_voz_y_dejala_libre:
 	ld d,001h		;4a59
-	call mezclador		;4a5b   ; se apaga en el mezclador
+	call enciende_o_apaga_el_ruido		;4a5b   ; con D=1: se cierra el ruido de esa voz
 	xor a			;4a5e
 	ld (ix+002h),a		;4a5f   ; y la voz queda libre
 	ld (ix+00bh),a		;4a62

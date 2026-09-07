@@ -235,13 +235,21 @@ C 0x4981 el 0x00 quiere decir para siempre
 C 0x4988 y si no, se vuelve a la direccion que trae el guion
 C 0x4994 dos bytes de la orden
 C 0x4997 la cuenta se reinicia
-B 0x49A2 ENCENDER O APAGAR UNA VOZ EN EL MEZCLADOR
+B 0x49A2 EL MEZCLADOR. OJO: los bits que toca son el 3, el 4 y el 5, o sea los
+B 0x49A2 del RUIDO, no los del tono. La copia del registro 7 (0xE03A) arranca a
+B 0x49A2 cero con el borrado de 0x40AC, y este es el UNICO sitio del cartucho
+B 0x49A2 que escribe el registro 7, asi que el tono de las tres voces queda
+B 0x49A2 abierto de principio a fin: para callar una voz se le baja el volumen,
+B 0x49A2 no se cierra aqui.
+B 0x49A2 Y el sentido de D es el contrario del que parece: el `dec d` manda al
+B 0x49A2 `or e` con D=1, y el registro 7 del PSG va al reves, asi que con D=1
+B 0x49A2 el bit se PONE y el ruido se APAGA.
 C 0x49A2 la copia del registro 7
 C 0x49A6 c es 1, 3 o 5: la voz
-C 0x49AC tres rotaciones dejan el bit de esa voz en su sitio del registro 7
-C 0x49AF con d a cero se apaga
-C 0x49B2 y se quita el bit
-C 0x49B6 con d a uno se enciende
+C 0x49AC tres rotaciones dejan 0x08, 0x10 o 0x20, los bits de RUIDO
+C 0x49AF con D a uno...
+C 0x49B2 el bit se quita y el ruido suena
+C 0x49B6 ...el bit se pone y el ruido calla
 C 0x49BB el registro 7 del PSG es el mezclador
 B 0x49C0 EL SONIDO DE CADA CUADRO
 C 0x49C0 primero el mezclador, tal como quedo
@@ -260,7 +268,7 @@ C 0x4A02 0xFE: repetir un trozo
 C 0x4A07 0xFF: se acabo la voz
 C 0x4A0A con el bit 7 puesto, lo que viene es una orden larga
 C 0x4A13 0x2n fija la duracion de las notas que siguen
-C 0x4A21 0x1n fija el ruido: el registro 6 del PSG y la voz metida en el mezclador
+C 0x4A21 0x1n fija el ruido: el registro 6 del PSG y el ruido abierto en el mezclador
 B 0x4A36 LA NOTA
 C 0x4A36 el nibble alto es el semitono
 C 0x4A3C y detras va el segundo byte de la nota
@@ -301,7 +309,7 @@ L 0x4901 pide_pieza_si_la_escena_lo_permite
 L 0x490C pide_pieza
 L 0x4958 arranca_una_voz
 L 0x4979 repite_un_trozo
-L 0x49A2 mezclador
+L 0x49A2 enciende_o_apaga_el_ruido
 L 0x49B7 escribe_el_mezclador
 L 0x49C0 suena_el_cuadro
 L 0x49E9 calla_la_voz_si_lo_pide_la_orden
@@ -2671,7 +2679,7 @@ C 0x45b8 a la casilla 0x10
 C 0x46e0 en los tres bancos desde 0x6200, que es 0x2200 con el bit 14 puesto
 C 0x46e6 y su color
 C 0x492c los efectos de 0x18 y 0x19 van a la segunda voz
-C 0x4a5b se apaga en el mezclador
+C 0x4a5b con D=1: se cierra el ruido de esa voz
 C 0x4a5f y la voz queda libre
 C 0x5a76 el reloj de la grabacion
 C 0x5a79 ocho cuadros por paso
@@ -2853,7 +2861,7 @@ C 0x4a11 el nibble alto de la orden
 C 0x4a17 0x2n: la duracion de las notas
 C 0x4a25 0x1n: el ruido
 C 0x4a2c el registro 6 del PSG es el periodo del ruido
-C 0x4a31 y la voz entra en el mezclador
+C 0x4a31 y con D=0 se abre el ruido de esa voz en el mezclador
 C 0x4a39 lo que queda es el semitono
 C 0x4a3d y el byte siguiente
 C 0x4a54 en el contador de la envolvente
