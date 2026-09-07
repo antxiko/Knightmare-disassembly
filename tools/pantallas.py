@@ -23,7 +23,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mapas import Rom, descomprime, png, escala, PALETA        # noqa: E402
-from coteja_vram import vram_de_la_fase, buffer_del_tramo, banco  # noqa: E402
+from coteja_vram import buffer_del_tramo                        # noqa: E402
+from mapas import (vram_de_la_fase,                            # noqa: E402
+                   en_los_tres_bancos as banco)
 
 NOMBRES = 0x3800
 FONDO = PALETA[0]                       # R7 = 0xE0: el fondo es el color 0

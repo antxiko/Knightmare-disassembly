@@ -19,10 +19,13 @@ R4 = 0x07):
 Lo que se compara, y por que:
 
   * PATRONES y COLOR. Los monta `monta_la_fase` al entrar y no se tocan hasta
-    que cambia de fase, asi que tienen que salir a CERO diferencias. Aqui se
-    rehacen los cinco volcados que hace el cartucho -la fuente, las casillas de
-    la fase con su copia espejada, el marcador, el marco y, solo en la fase 7,
-    las casillas de mas- con el mismo orden y las mismas direcciones.
+    que cambia de fase, asi que tienen que salir a CERO diferencias. Los cinco
+    volcados que hace el cartucho -la fuente, las casillas de la fase con su
+    copia espejada, el marcador, el marco y, solo en la fase 7, las casillas de
+    mas- los rehace `vram_de_la_fase`, que vive en tools/mapas.py: es LA MISMA
+    hoja con la que se dibujan los mapas, y por eso este cotejo tambien los
+    respalda a ellos. Antes habia dos, y la de los mapas se dejaba fuera el
+    marcador: los rios y los puentes salian negros.
 
   * LA TABLA DE NOMBRES, que es el mapa. `vuelca_la_pantalla` (0x64A3) copia
     0x300 bytes desde 0xE8A0 menos (0xE091 & 3) * 32, o sea que la pantalla
@@ -38,75 +41,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mapas import Rom, descomprime, vuelve_los_bits            # noqa: E402
+from mapas import (Rom, vram_de_la_fase,                       # noqa: E402
+                   TABLA_FASES, TABLA_BLOQUES)
 
-TABLA_FASES = 0x99CD
-TABLA_BLOQUES = 0x99ED
-TABLA_GRAFICOS = 0x563C
-FUENTE = 0x45C9
 BANDAS = 7
-
-
-def banco(v, destino, datos, espejo=False):
-    """`descomprime_en_los_tres_bancos` (0x43D1): el mismo guion en los tres
-    tercios, 0x800 mas alla cada vez. Con espejo, `vuelca_el_guion_en_los_tres_tercios`
-    (0x43E1), que ademas da la vuelta a los ocho bits de cada byte."""
-    if espejo:
-        datos = bytes(vuelve_los_bits(x) for x in datos)
-    for k in range(3):
-        i = destino + k * 0x800
-        v[i:i + len(datos)] = datos
-
-
-def vram_de_la_fase(rom, fase, v=None):
-    """Los 0x3800 primeros bytes de la VRAM tal como los deja `monta_la_fase`.
-
-    Se le puede pasar la VRAM que habia antes, y hay que hacerlo: el cartucho
-    NO borra los patrones ni el color al cambiar de fase, solo la tabla de
-    nombres. Las fases 1, 2 y 4 traen menos casillas que la 0 -61, 59 y 79
-    contra 80-, asi que lo que sobra se queda de la anterior. Montar una fase
-    suelta deja cientos de bytes de diferencia que no son un error de lectura
-    sino herencia que falta.
-    """
-    v = bytearray(0x3800) if v is None else bytearray(v)
-
-    # 0x4595: las dieciseis primeras casillas, patron a cero y un color cada
-    # una, en los tres bancos
-    banco(v, 0x2000, bytes(0x80))
-    for n in range(16):
-        banco(v, 0x0000 + n * 8, bytes([n]) * 8)
-
-    # 0x45B5: la fuente, y su color en blanco sobre transparente
-    banco(v, 0x2080, descomprime(rom, FUENTE))
-    banco(v, 0x0080, bytes([0xF0]) * 0x118)
-
-    # 0x565C: el marcador de arriba y el marco
-    banco(v, 0x2138, descomprime(rom, 0xB17B))
-    banco(v, 0x2438, descomprime(rom, 0xB17B), espejo=True)
-    banco(v, 0x0138, descomprime(rom, 0xB285))
-    banco(v, 0x0438, descomprime(rom, 0xB285))
-    banco(v, 0x2500, descomprime(rom, 0xB2FB))
-    banco(v, 0x0500, descomprime(rom, 0xB314))
-
-    # 0x54F8: las casillas de la fase y su copia espejada; el color se
-    # descomprime dos veces sin espejar, que dar la vuelta a una fila de ocho
-    # pixeles no cambia sus colores
-    a = TABLA_GRAFICOS + 4 * fase
-    pat = descomprime(rom, rom.w(a))
-    bank = 1 if fase == 3 else 2 if fase == 7 else 0
-    col = descomprime(rom, rom.w(a + 2), bank)
-    banco(v, 0x2280, pat)
-    banco(v, 0x2580, pat, espejo=True)
-    banco(v, 0x0280, col)
-    banco(v, 0x0580, col)
-
-    # 0x553E: y solo la fase 7 carga las casillas de mas
-    if fase == 7:
-        banco(v, 0x2470, descomprime(rom, 0xBE41))
-        banco(v, 0x2770, descomprime(rom, 0xBE41), espejo=True)
-        banco(v, 0x0470, descomprime(rom, 0xBEB7))
-        banco(v, 0x0770, descomprime(rom, 0xBEB7))
-    return v
 
 
 def buffer_del_tramo(rom, fase, tramo):

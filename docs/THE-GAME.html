@@ -89,27 +89,35 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p><em>The title screen, assembled by running the steps of <code>monta_el_titulo</code> (0x47BA). The big logo is 33 tiles — eleven by three — written in a row by a loop starting at tile 0x60.</em></p>
 <h2 id="the-eight-stages-in-full">The eight stages, in full</h2>
 <p>Each stage is a vertical strip of <b>61 bands of four rows</b>, that is 244 rows of tiles. It is not stored as a map: it is assembled block by block.</p>
-<p><img src="imagenes/fase_1.png?v=a2deabca" alt="Stage 1"></p>
-<p><em>Stage 1 in full. It comes out of the block codes at <code>0x9E51</code> and the 4x4 tile blocks at <code>0x9A6D</code>.</em></p>
+<p>Here are <b>all eight</b>, top to bottom and at full size: 256 x 1952 pixels each. They come out of each stage&#x27;s block codes and the 4x4 tile blocks at <code>0x9A6D</code>; not one of them is a screen capture.</p>
+<table><tr><th></th><th></th><th></th><th></th></tr><tr><td><img src="imagenes/fase_1.png?v=a8c20bcb" alt="Stage 1"></td><td><img src="imagenes/fase_2.png?v=8e9dc424" alt="Stage 2"></td><td><img src="imagenes/fase_3.png?v=b160087b" alt="Stage 3"></td><td><img src="imagenes/fase_4.png?v=1aee75c7" alt="Stage 4"></td></tr><tr><td><b>Stage 1</b></td><td><b>Stage 2</b></td><td><b>Stage 3</b></td><td><b>Stage 4</b></td></tr><tr><td><img src="imagenes/fase_5.png?v=60c89462" alt="Stage 5"></td><td><img src="imagenes/fase_6.png?v=239194cb" alt="Stage 6"></td><td><img src="imagenes/fase_7.png?v=a8c34c54" alt="Stage 7"></td><td><img src="imagenes/fase_8.png?v=c9434f05" alt="Stage 8"></td></tr><tr><td><b>Stage 5</b></td><td><b>Stage 6</b></td><td><b>Stage 7</b></td><td><b>Stage 8</b></td></tr></table>
+<p>They read bottom to top, which is how they are played: Popolon comes in at the bottom edge and climbs. The topmost band is the boss gate.</p>
 <p>The builder is <code>0x6502</code> and it works like this:</p>
 <ul><li>The stage is split into <b>ten sections</b>, and each section into <b>seven bands</b> of four rows.</li><li>Each band is <b>eight groups of four columns</b>. Every group yields a block code: the low seven bits index the table at <code>0x99ED</code> — 64 pointers to 4x4 tile blocks — and <b>bit 7 says the block goes mirrored</b>.</li><li>After each group, an <code>rl</code> pulls one bit out of a bitmap: with the bit set the pointer moves on to the next block, with it clear <b>the previous block is repeated</b>. That is where the scenery compression lives.</li></ul>
 <p>And the blocks <b>overlap each other</b>: <code>0x9C21</code> and <code>0x9C3E</code> fall halfway into another block, so one stretch of bytes serves as two different blocks.</p>
+<h2 id="the-rivers-and-the-bridges-do-not-belong-to-the-stage">The rivers and the bridges do not belong to the stage</h2>
+<p>A stage&#x27;s tile sheet <b>is not loaded by the stage alone</b>. Before building it, <code>monta_el_marcador</code> (<code>0x565C</code>) uploads another block of 41 tiles — <code>0x27</code> to <code>0x4F</code> — and its mirrored copy at <code>0x87</code>. That block is not just the bottom panel: <b>the rivers and the bridges</b> live in it, the same in all eight stages, which is why any stage&#x27;s map uses them without carrying them.</p>
+<p>Order matters: the panel first and the stage tiles <b>on top</b>, overwriting <code>0x87</code> to <code>0x9F</code> of the panel&#x27;s mirrored copy. Build the sheet with the stage tiles alone and the bridges and rivers come out black.</p>
 <h2 id="three-sceneries-out-of-one-colour-script">Three sceneries out of one colour script</h2>
-<p><img src="imagenes/fase_4.png?v=9f5a86da" alt="Stage 4"></p>
-<p><em>Stage 4 uses the SAME tiles as stage 1. What changes is the palette.</em></p>
-<p>Stages 0, 3 and 7 share the pattern script <b>and</b> the colour one. What tells them apart is <code>(0xE661)</code>: the block reader (<code>0x443B</code>) translates five colour codes — 0xE1, 0xEC, 0xE8, 0xE6 and 0xE5 — by subtracting 0x50, and another 0x50 when the bank is 2. One 640-byte block gives all three sceneries.</p>
+<p>Stage 4 uses the SAME tiles as stage 1. What changes is the palette. Stages 0, 3 and 7 share the pattern script <b>and</b> the colour one. What tells them apart is <code>(0xE661)</code>: the block reader (<code>0x443B</code>) translates five colour codes — 0xE1, 0xEC, 0xE8, 0xE6 and 0xE5 — by subtracting 0x50, and another 0x50 when the bank is 2. One 640-byte block gives all three sceneries.</p>
 <p>Stages 5 and 6 go further: they share tiles and colour, and <b>differ only in the map</b>.</p>
 <h2 id="popolon-is-three-sprites">Popolon is three sprites</h2>
-<p><img src="imagenes/jugador.png?v=d5db067a" alt="The player&#x27;s frames"></p>
+<p><img src="imagenes/jugador.png?v=20c058b4" alt="The player&#x27;s frames"></p>
 <p><em>The twelve frames. The last four are the explosion.</em></p>
 <p>The figure is drawn with <b>three overlaid 16x16 sprites</b>: <code>0x5E2D</code> writes them with patterns 0, 1 and 2. The first two are uploaded by the frame — each takes <b>exactly 64 bytes</b>, that is two patterns — and the third is the first of the stage&#x27;s fixed bank. Each one&#x27;s <code>y</code> and colour come from a six-byte block: three <code>[y offset][colour]</code> pairs.</p>
 <p>There are seven animations in the table at <code>0xA5B4</code>, and one of them — number 2 — alternates its colours with those at <code>0xA5EF</code> to make the invulnerability blink.</p>
 <h2 id="the-bestiary-does-not-fit-at-once">The bestiary does not fit at once</h2>
-<p><img src="imagenes/banco_de_enemigos.png?v=bd21ab0e" alt="The enemy bank"></p>
-<p><em>The 45 patterns of the sixteen blocks at <code>0xA993</code>.</em></p>
+<p><img src="imagenes/banco_de_enemigos.png?v=3f90c326" alt="The enemy bank"></p>
+<p><em>The sixteen kinds of creature, one per block at <code>0xA993</code>, in the colour the table at <code>0x7772</code> gives them.</em></p>
 <p>The MSX sprite sheet is 64 16x16 patterns and that is not enough, so the cartridge keeps <b>three slots</b> — VRAM <code>0x1D00</code>, <code>0x1E00</code> and <code>0x1F00</code> — that it reloads in turn: <code>0x78F9</code> decompresses four patterns into whichever is next and also takes away the base pattern number, later added to each of the creature&#x27;s sprites.</p>
-<p>Every enemy is drawn with <b>two sprites</b>, and the pair comes from the table at <code>0x7772</code>: 38 eight-byte blocks with two <code>[dy][dx][pattern][colour]</code> entries.</p>
-<p><img src="imagenes/sprites_fase.png?v=138c1012" alt="The weapons and items"></p>
+<p>Every enemy is drawn with <b>two sprites</b>, and the pair comes from the table at <code>0x7772</code>: 38 eight-byte blocks with two <code>[dy][dx][pattern][colour]</code> entries. From entry 5 on the pattern byte is <b>relative</b> — <code>0x7755</code> compares against 5 and only then adds <code>(ix+0x16)</code> — so a creature cannot be drawn without knowing which slot it was loaded into.</p>
+<p>And it can be known, because the type settles both: <code>(iy+0) &amp; 0x0F</code> is what <code>0x7914</code> uses to pick the block at <code>0xA993</code>, and it is also what <code>0x75E5</code> uses to pick the subtable at <code>0x75F3</code> whose routines write <code>(ix+0x0A)</code>, the entry into <code>0x7772</code>. Tie those two ends together and <b>it closes on its own</b>: the patterns each type&#x27;s entries ask for are exactly the ones its block carries, not one more and not one fewer, in all sixteen.</p>
+<p><img src="imagenes/enemigos.png?v=286af662" alt="The enemies"></p>
+<p><em>The 42 frames of the table at <code>0x7772</code>, each with its type&#x27;s block loaded in the slot. The grey background is deliberate: most of these creatures are colour-1 silhouettes, that is BLACK.</em></p>
+<p>Of a creature&#x27;s two sprites the <b>first</b> one wins: <code>0x772A</code> writes them into consecutive attributes, and on the TMS9918 the lower plane number covers the other. Painted the other way round, the solid fill eats the silhouette.</p>
+<p><img src="imagenes/armas.png?v=5b316451" alt="The weapons"></p>
+<p><em>The seven weapons of the table at <code>0x63FB</code>, a <code>[pattern][colour]</code> pair each. Only the last two animate: <code>0x636D</code> gives them four frames with an <code>and 003h</code>.</em></p>
+<p><img src="imagenes/sprites_fase.png?v=3e7633f4" alt="The weapons and items"></p>
 <p><em>The 37 fixed patterns <code>0x54BE</code> uploads at the start of every stage: the weapons, the shots and the items. The same in all eight.</em></p>
 <h2 id="the-scoreboard-and-the-boss-clock">The scoreboard and the boss clock</h2>
 <p><img src="imagenes/pantalla_fase1.png?v=a395543c" alt="The first screen of stage 1"></p>

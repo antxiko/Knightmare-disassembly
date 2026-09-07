@@ -138,14 +138,24 @@ GALERIA = [
      "fourteen steps."),
     ("fase_1.png",
      "La fase 1 entera, en vertical: 61 bandas de cuatro filas, montadas "
-     "bloque a bloque desde los codigos de <code>0x9E51</code>.",
+     "bloque a bloque desde los codigos de <code>0x9E51</code>. Los rios y "
+     "los puentes NO son casillas de la fase: vienen del bloque que sube "
+     "<code>monta_el_marcador</code> (0x565C), y son los mismos en las ocho.",
      "Stage 1 in full, top to bottom: 61 bands of four rows, assembled block "
-     "by block from the codes at <code>0x9E51</code>."),
+     "by block from the codes at <code>0x9E51</code>. The rivers and the "
+     "bridges are NOT stage tiles: they come from the block uploaded by "
+     "<code>monta_el_marcador</code> (0x565C), the same in all eight."),
     ("fase_4.png",
      "La fase 4. Usa las MISMAS casillas que la 1, pasadas por el traductor "
      "de <code>0x443B</code>: por eso los muros son rosa y no gris.",
      "Stage 4. It uses the SAME tiles as stage 1, run through the translator "
      "at <code>0x443B</code>: that is why the walls are pink, not grey."),
+    ("fase_8.png",
+     "La fase 8, el castillo, con el jefe final esperando en la banda de "
+     "arriba. Las OCHO estan enteras, y a tamano real, en la pagina "
+     "<em>El juego</em>.",
+     "Stage 8, the castle, with the final boss waiting on the top band. ALL "
+     "EIGHT are on the <em>The game</em> page, in full and at full size."),
     ("jugador.png",
      "Los doce fotogramas de Popolon. Son TRES sprites -dos del fotograma y "
      "uno del banco de la fase- y cada fotograma ocupa 64 bytes justos. Los "
@@ -154,12 +164,28 @@ GALERIA = [
      "from the stage bank- and each frame takes exactly 64 bytes. The last "
      "four are the explosion."),
     ("banco_de_enemigos.png",
-     "Los 45 patrones del bestiario. No caben a la vez: el cartucho los "
-     "recarga en TRES ranuras de la hoja de sprites (0x1D00, 0x1E00 y 0x1F00) "
-     "segun lo que vaya saliendo.",
-     "The 45 patterns of the bestiary. They do not fit at once: the cartridge "
-     "reloads them into THREE slots of the sprite sheet (0x1D00, 0x1E00 and "
-     "0x1F00) as they are needed."),
+     "Los dieciseis tipos de bicho, uno por bloque de <code>0xA993</code>. No "
+     "caben a la vez: el cartucho los recarga en TRES ranuras de la hoja de "
+     "sprites (0x1D00, 0x1E00 y 0x1F00) segun lo que vaya saliendo.",
+     "The sixteen kinds of creature, one per block at <code>0xA993</code>. "
+     "They do not fit at once: the cartridge reloads them into THREE slots of "
+     "the sprite sheet (0x1D00, 0x1E00 and 0x1F00) as they are needed."),
+    ("enemigos.png",
+     "Los 42 fotogramas de la tabla de <code>0x7772</code>, cada uno con el "
+     "bloque de SU tipo cargado en la ranura: sin eso el byte de patron es "
+     "relativo y no dibuja nada. El fondo es gris a proposito, que casi todos "
+     "son siluetas de color 1, o sea negras.",
+     "The 42 frames of the table at <code>0x7772</code>, each with ITS type's "
+     "block loaded in the slot: without that the pattern byte is relative and "
+     "draws nothing. The grey background is deliberate: nearly all of them are "
+     "colour-1 silhouettes, that is black."),
+    ("armas.png",
+     "Las siete armas de la tabla de <code>0x63FB</code>, pareja "
+     "<code>[patron][color]</code>. Solo las dos ultimas se animan, con "
+     "cuatro fotogramas cada una.",
+     "The seven weapons of the table at <code>0x63FB</code>, a "
+     "<code>[pattern][colour]</code> pair each. Only the last two animate, "
+     "with four frames apiece."),
     ("sprites_fase.png",
      "Los 37 patrones fijos de cada fase: las armas, los disparos y los "
      "objetos. Iguales en las ocho.",

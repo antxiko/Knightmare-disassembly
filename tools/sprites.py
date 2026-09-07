@@ -28,6 +28,13 @@ from mapas import (Rom, descomprime, png, escala, PALETA,          # noqa: E402
 PATRONES = 0x1800                       # R6 = 0x03 -> 0x03 * 0x800
 FONDO = PALETA[0]                       # R7 = 0xE0: el fondo es el color 0
 
+# El fondo de las laminas de sprites es un gris medio, y no el negro del juego,
+# por una razon: la mayoria de los bichos de este cartucho son siluetas de
+# color 1, o sea NEGRAS. Sobre negro no se ven, y sobre blanco tampoco se verian
+# las de color 15.
+PAPEL = (0x74, 0x74, 0x7C)
+MARGEN = (0x18, 0x18, 0x20)
+
 # (destino de VRAM, datos, con la palabra de destino dentro, quien lo suelta)
 BLOQUES = [
     (0x1840, 0xA71E, True,  "0x54BE, al empezar la fase"),
@@ -52,17 +59,26 @@ def vram_con(rom, cuales):
     return v
 
 
-def patron(v, n, color, fondo=FONDO):
-    """Un sprite de 16x16: cuatro cuartos de 8x8 en el orden del VDP -izquierda
-    arriba, izquierda abajo, derecha arriba, derecha abajo-."""
-    px = [[fondo] * 16 for _ in range(16)]
+def patron(v, n, color):
+    """Un sprite de 16x16, con None donde el sprite no tapa nada.
+
+    Los pixeles apagados de un sprite son TRANSPARENTES, y los encendidos
+    llevan el color de su atributo. Devolver None en vez de un color de fondo
+    no es un detalle: el color 1 es NEGRO, y un sprite negro sobre un fondo
+    negro se pierde entero si se componen comparando colores en vez de mirar
+    los bits. Los bichos de este cartucho son en su mayoria siluetas negras.
+
+    El sprite son dos columnas de 16 bytes: la izquierda y la derecha.
+    """
+    px = [[None] * 16 for _ in range(16)]
     b = n * 32
+    tinta = PALETA[color & 0x0F]
     for mitad in range(2):
         for f in range(16):
             byte = v[b + mitad * 16 + f]
             for k in range(8):
                 if byte & (0x80 >> k):
-                    px[f][mitad * 8 + k] = PALETA[color & 0x0F]
+                    px[f][mitad * 8 + k] = tinta
     return px
 
 
@@ -72,13 +88,21 @@ def hoja(v, color=15, cols=8, esc=2, sep=1):
     w = cols * (16 + sep) + sep
     h = filas * (16 + sep) + sep
     px = bytearray()
-    lienzo = [[(0x18, 0x18, 0x20)] * w for _ in range(h)]
+    lienzo = [[MARGEN] * w for _ in range(h)]
+    for n in range(64):
+        oy = sep + (n // cols) * (16 + sep)
+        ox = sep + (n % cols) * (16 + sep)
+        for y in range(16):
+            for x in range(16):
+                lienzo[oy + y][ox + x] = PAPEL
     for n in range(64):
         d = patron(v, n, color)
         oy = sep + (n // cols) * (16 + sep)
         ox = sep + (n % cols) * (16 + sep)
         for y in range(16):
-            lienzo[oy + y][ox:ox + 16] = d[y]
+            for x in range(16):
+                if d[y][x] is not None:
+                    lienzo[oy + y][ox + x] = d[y][x]
     for fila in lienzo:
         for r, g, b in fila:
             px += bytes((r, g, b))
@@ -160,14 +184,14 @@ def dibuja_al_jugador(rom, v_fase, datos, atributos):
     ys = [y - 256 if y > 127 else y for y in ys]
     y0 = min(ys)
     alto = max(y + 16 for y in ys) - y0
-    px = [[FONDO] * 16 for _ in range(alto)]
-    for k in range(3):
+    px = [[None] * 16 for _ in range(alto)]
+    for k in reversed(range(3)):              # el plano 0 va encima del 1 y del 2
         if cs[k] & 0x0F == 0:                    # color 0: no se ve
             continue
         d = patron(v, k, cs[k])
         for f in range(16):
             for c in range(16):
-                if d[f][c] != FONDO:
+                if d[f][c] is not None:
                     px[ys[k] - y0 + f][c] = d[f][c]
     return px
 
@@ -181,6 +205,81 @@ def dibuja_al_jugador(rom, v_fase, datos, atributos):
 # posicion del enemigo. Los punteros son 38 y cierran solos: el mas bajo,
 # 0x77BE, esta a 76 bytes del principio de la tabla.
 ENEMIGOS = 0x7772
+ARMAS = 0x63FB                  # pareja [patron][color] por arma, que lee 0x63E9
+
+# LOS DIECISEIS TIPOS DE BICHO, cada uno con SU bloque de patrones.
+#
+# El sprite de un enemigo NO se puede dibujar con la hoja de patrones fija: de
+# la entrada numero 4 en adelante, el byte de patron de la tabla de 0x7772 es
+# RELATIVO, y 0x775D le suma (ix+0x16), que es el patron base de la ranura en
+# la que se cargo ese bicho. Sin eso salen cuadros negros.
+#
+# La cadena que ata cada entrada con su bloque, seguida en el listado:
+#
+#   (iy+0) & 0x0F  ES EL TIPO. 0x7914 lo usa para indexar 0xA993 y descomprimir
+#   los cuatro patrones de ese tipo en la ranura, y 0x730F lo copia al bicho
+#   vivo en (ix+1). 0x75E5 lo vuelve a leer para elegir una de las dieciseis
+#   subtablas de 0x75F3, y son las rutinas de esa subtabla las que escriben
+#   (ix+0x0A), que es la entrada de 0x7772.
+#
+# O sea que el tipo manda las dos cosas, y basta con leer que valor de
+# (ix+0x0A) escribe cada subtabla. TIPOS lo recoge, y CUADRA SOLO: los
+# patrones que piden las entradas de cada tipo son exactamente los que trae su
+# bloque -ni uno de mas ni uno de menos- en los dieciseis.
+#
+#   ranura 0   patrones en 0x1D00   espejo en 0x1D80   patron base 0xA0
+#   ranura 1               0x1E00               0x1E80               0xC0
+#   ranura 2               0x1F00               0x1F80               0xE0
+#
+# El espejo lo hace `espeja_un_sprite` (0x4484), que ademas de darle la vuelta
+# a los ocho bits de cada byte INTERCAMBIA las dos mitades del sprite: empieza
+# a escribir en destino+0x10 y baja. Por eso las entradas con patron 0x10 o
+# mas son el mismo bicho mirando al otro lado.
+BANCO_DE_ENEMIGOS = 0xA993
+RANURAS = 0x7944
+BASE_RANURA_0 = 0xA0            # 0x7950
+VRAM_RANURA_0 = 0x1D00
+TIPOS = [
+    # tipo: entradas de 0x7772 que escriben sus rutinas de 0x75F3
+    (0,  [6, 7, 8]),
+    (1,  [9, 10]),
+    (2,  [9, 10]),
+    (3,  [9, 10]),
+    (4,  [11, 12]),
+    (5,  [13, 14]),
+    (6,  [15, 16]),
+    (7,  [17, 18, 19, 20, 21]),
+    (8,  [22, 23]),
+    (9,  [24, 25]),
+    (10, [26, 27]),
+    (11, [5]),
+    (12, [28, 29]),
+    (13, [30, 31]),
+    (14, [32, 33]),
+    (15, [34, 35, 36, 37]),
+]
+
+
+def espeja_un_sprite(datos):
+    """0x4484: los ocho bits de cada byte al reves y, ademas, las dos mitades
+    del sprite CAMBIADAS, que es lo que hace que el bicho mire al otro lado."""
+    b = bytes(vuelve_los_bits(x) for x in datos[:32])
+    return b[16:32] + b[0:16]
+
+
+def vram_del_tipo(rom, tipo, estaticos):
+    """La VRAM de sprites con el bloque de ese tipo en la ranura 0 y su copia
+    espejada detras, que es como la deja 0x78F9."""
+    v = bytearray(estaticos)
+    b = descomprime(rom, rom.w(BANCO_DE_ENEMIGOS + 2 * tipo))
+    i = VRAM_RANURA_0 - PATRONES
+    v[i:i + len(b)] = b
+    for k in range(len(b) // 32):
+        e = espeja_un_sprite(b[k * 32:k * 32 + 32])
+        j = i + 0x80 + k * 32
+        v[j:j + 32] = e
+    return v
+
 
 # --------------------------------------------------------------------------
 # EL BANCO DE ENEMIGOS
@@ -196,8 +295,6 @@ ENEMIGOS = 0x7772
 #
 # Los destinos salen de 0x7944 y 0x794A y los patrones base de 0x7950, las tres
 # tablas de tres entradas que 0x78F9 indexa con (0xE1F1).
-BANCO_DE_ENEMIGOS = 0xA993
-RANURAS = 0x7944
 
 
 def cuantos_enemigos(rom):
@@ -207,27 +304,36 @@ def cuantos_enemigos(rom):
     return (mn - ENEMIGOS) // 2
 
 
-def dibuja_un_enemigo(rom, v, p):
-    """Los dos sprites de un enemigo, cada uno con su desplazamiento."""
+def dibuja_un_enemigo(rom, v, p, base=0):
+    """Los dos sprites de un enemigo, cada uno con su desplazamiento.
+
+    `base` es (ix+0x16), el patron base de la ranura: 0x7755 se lo suma al
+    byte de patron de las entradas de la 5 en adelante -`cp 005h` y `jr c`- y
+    NO a las cuatro primeras, que llevan patron absoluto.
+    """
     trozos = []
     for k in range(2):
         dy, dx = rom.b(p + 4 * k), rom.b(p + 4 * k + 1)
         pat, col = rom.b(p + 4 * k + 2), rom.b(p + 4 * k + 3)
         dy = dy - 256 if dy > 127 else dy
         dx = dx - 256 if dx > 127 else dx
-        trozos.append((dy, dx, pat >> 2, col))
+        trozos.append((dy, dx, ((pat + base) & 0xFF) >> 2, col))
     y0 = min(t[0] for t in trozos)
     x0 = min(t[1] for t in trozos)
     alto = max(t[0] for t in trozos) - y0 + 16
     ancho = max(t[1] for t in trozos) - x0 + 16
-    px = [[FONDO] * ancho for _ in range(alto)]
-    for dy, dx, bloque, col in trozos:
+    px = [[None] * ancho for _ in range(alto)]
+    # el PLANO manda: 0x772A escribe los dos sprites en atributos seguidos, y
+    # en el TMS9918 gana el de numero mas bajo. O sea que el primero va ENCIMA
+    # del segundo, y hay que pintarlos del ultimo al primero. Al reves, el
+    # relleno macizo tapa la silueta y el bicho sale como un cuadro de color.
+    for dy, dx, bloque, col in reversed(trozos):
         if col & 0x0F == 0:
             continue
         d = patron(v, bloque, col)
         for f in range(16):
             for c in range(16):
-                if d[f][c] != FONDO:
+                if d[f][c] is not None:
                     px[dy - y0 + f][dx - x0 + c] = d[f][c]
     return px
 
@@ -238,12 +344,17 @@ def rejilla(dibujos, cols, esc=3, sep=2):
     filas = (len(dibujos) + cols - 1) // cols
     w = cols * (ancho + sep) + sep
     h = filas * (alto + sep) + sep
-    lienzo = [[(0x18, 0x18, 0x20)] * w for _ in range(h)]
+    lienzo = [[MARGEN] * w for _ in range(h)]
     for i, d in enumerate(dibujos):
         oy = sep + (i // cols) * (alto + sep)
         ox = sep + (i % cols) * (ancho + sep)
+        for y in range(alto):
+            for x in range(ancho):
+                lienzo[oy + y][ox + x] = PAPEL
         for y, fila in enumerate(d):
-            lienzo[oy + alto - len(d) + y][ox:ox + len(fila)] = fila
+            for x, c in enumerate(fila):
+                if c is not None:
+                    lienzo[oy + alto - len(d) + y][ox + x] = c
     return w * esc, h * esc, escala(lienzo, esc)
 
 
@@ -291,29 +402,62 @@ def main():
     ancho = 16
     w = len(dibujos) * (ancho + sep) + sep
     h = alto + 2 * sep
-    lienzo = [[(0x18, 0x18, 0x20)] * w for _ in range(h)]
+    lienzo = [[MARGEN] * w for _ in range(h)]
     for i, d in enumerate(dibujos):
         ox = sep + i * (ancho + sep)
+        for y in range(alto):
+            for x in range(ancho):
+                lienzo[sep + y][ox + x] = PAPEL
         for y, fila in enumerate(d):
-            lienzo[sep + alto - len(d) + y][ox:ox + ancho] = fila
-    v = vram_con(rom, list(range(len(BLOQUES))))
+            for x, c in enumerate(fila):
+                if c is not None:
+                    lienzo[sep + alto - len(d) + y][ox + x] = c
+    estaticos = vram_con(rom, list(range(len(BLOQUES))))
     n = cuantos_enemigos(rom)
-    ene = [dibuja_un_enemigo(rom, v, rom.w(ENEMIGOS + 2 * k)) for k in range(n)]
+
+    # las cuatro primeras entradas llevan patron absoluto (0x7755); las demas
+    # van con el bloque de SU tipo cargado en la ranura 0
+    ene = [dibuja_un_enemigo(rom, estaticos, rom.w(ENEMIGOS + 2 * k))
+           for k in range(5)]
+    for tipo, entradas in TIPOS:
+        v = vram_del_tipo(rom, tipo, estaticos)
+        for k in entradas:
+            ene.append(dibuja_un_enemigo(rom, v, rom.w(ENEMIGOS + 2 * k),
+                                         BASE_RANURA_0))
     w2, h2, px2 = rejilla(ene, 8)
     fn2 = os.path.join(salida, "enemigos.png")
     png(w2, h2, px2, fn2)
-    print("  %s  %d x %d  (los %d enemigos de la tabla de 0x7772)"
-          % (fn2, w2, h2, n))
+    print("  %s  %d x %d  (los %d fotogramas de la tabla de 0x7772: %d de patron"
+          " absoluto y los demas, por tipo, con su bloque de 0xA993)"
+          % (fn2, w2, h2, len(ene), 5))
 
-    # el banco de enemigos: dieciseis bloques de cuatro patrones
-    todos = []
-    for k, p, b in bloques_de_enemigo(rom):
-        todos += hoja_de_un_bloque(b, 15)
-    w3, h3, px3 = rejilla(todos, 8)
+    # LAS ARMAS, en color. 0x63E9 saca de la tabla de 0x63FB una pareja
+    # [patron][color] por arma y le suma cuatro por fotograma, que es (ix+6).
+    # Solo las armas 6 y 7 se animan -0x636D, `and 003h`: cuatro fotogramas-;
+    # las otras cinco llevan (ix+6) a cero y salen con uno solo.
+    armas = []
+    for arma in range(7):
+        pat = rom.b(ARMAS + 2 * arma)
+        col = rom.b(ARMAS + 2 * arma + 1)
+        for f in range(4 if arma >= 5 else 1):
+            armas.append(patron(estaticos, (pat + 4 * f) >> 2, col))
+    w4, h4, px4 = rejilla(armas, 7)
+    fn4 = os.path.join(salida, "armas.png")
+    png(w4, h4, px4, fn4)
+    print("  %s  %d x %d  (las siete armas de 0x63FB; las dos ultimas, con sus"
+          " cuatro fotogramas)" % (fn4, w4, h4))
+
+    # y los dieciseis tipos de un vistazo: un fotograma de cada uno
+    banco = []
+    for tipo, entradas in TIPOS:
+        v = vram_del_tipo(rom, tipo, estaticos)
+        banco.append(dibuja_un_enemigo(rom, v, rom.w(ENEMIGOS + 2 * entradas[0]),
+                                       BASE_RANURA_0))
+    w3, h3, px3 = rejilla(banco, 8)
     fn3 = os.path.join(salida, "banco_de_enemigos.png")
     png(w3, h3, px3, fn3)
-    print("  %s  %d x %d  (%d patrones, los 16 bloques de 0xA993)"
-          % (fn3, w3, h3, len(todos)))
+    print("  %s  %d x %d  (los 16 tipos de 0xA993, uno por bloque, con el color"
+          " que les pone 0x7772)" % (fn3, w3, h3))
 
     fn = os.path.join(salida, "jugador.png")
     png(w * esc, h * esc, escala(lienzo, esc), fn)

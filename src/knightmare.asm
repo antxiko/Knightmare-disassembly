@@ -6441,9 +6441,16 @@ DATA_tabla_de_sprites_de_enemigo:
 
 ; ----------------------------------------------------------------------
 ; DATOS sprites_de_los_enemigos: 38 bloques de ocho bytes: dos sprites de
-;   [dy][dx][patron][color] que se suman a la posicion del enemigo. Del quinto
-;   en adelante, al patron se le suma ademas (ix+0x16), que es el patron base
-;   de la ranura en la que se ha cargado ese enemigo
+;   [dy][dx][patron][color] que se suman a la posicion del enemigo. A las
+;   entradas 0 a 4 el patron les va absoluto; de la 5 en adelante -0x7755 hace
+;   `cp 005h` y `jr c`- al patron se le suma ademas (ix+0x16), que es el
+;   patron base de la ranura en la que se ha cargado ese enemigo. Cual es el
+;   bloque de cada entrada lo dice el TIPO, que manda las dos cosas: 0x7914 lo
+;   usa (nibble bajo) para elegir el bloque de 0xA993 y 0x75E5 para elegir la
+;   subtabla de 0x75F3 cuyas rutinas escriben (ix+0x0A). Atadas las dos puntas
+;   cuadra solo: los patrones que piden las entradas de cada tipo son
+;   exactamente los que trae su bloque, ni uno de mas ni uno de menos, en los
+;   dieciseis (test propio)
 ;   0x77be..0x78e6  (296 bytes)
 DATA_sprites_de_los_enemigos:
 	defb 0fdh,0fch,044h,00ah	; 77be
@@ -6584,7 +6591,11 @@ L_7942:
 
 ; ----------------------------------------------------------------------
 ; DATOS ranuras_de_enemigo: Las tres direcciones de VRAM donde 0x7926
-;   descomprime los patrones: 0x1D00, 0x1E00 y 0x1F00
+;   descomprime los patrones: 0x1D00, 0x1E00 y 0x1F00. Cada ranura son OCHO
+;   patrones: cuatro tal cual y cuatro espejados 0x80 mas alla, que es donde
+;   acaba escribiendo `espeja_un_sprite` aunque la tabla de al lado diga
+;   0x1D90 -esa rutina arranca en destino+0x10 porque ademas de dar la vuelta
+;   a los bits INTERCAMBIA las dos mitades del sprite-
 ;   0x7944..0x794a  (6 bytes)
 DATA_ranuras_de_enemigo:
 	defw 01d00h,01e00h,01f00h	; 7944

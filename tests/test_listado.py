@@ -440,5 +440,71 @@ class TestSinNombresDeOtroJuego(unittest.TestCase):
         self.assertEqual(faltan, [], "citados y no estan: %s" % sorted(faltan))
 
 
+class TestLasImagenesSeDibujanEnteras(unittest.TestCase):
+    """Las dos comprobaciones que le faltaban a las laminas.
+
+    Las dos nacen de sendos fallos que estuvieron PUBLICADOS: los mapas salian
+    con los rios y los puentes en negro, y los enemigos, con cuadros negros.
+    Las dos veces el dibujo se hacia con una hoja de patrones incompleta, y las
+    dos veces el fallo se ve mirando la imagen... si a uno se le ocurre mirar.
+    Esto lo comprueba solo.
+    """
+
+    def setUp(self):
+        sys.path.insert(0, os.path.join(RAIZ, "tools"))
+        rom = os.path.join(RAIZ, "knightmare.rom")
+        if not os.path.exists(rom):
+            self.skipTest("hace falta el cartucho")
+        import mapas
+        self.mapas = mapas
+        self.rom = mapas.Rom(rom, ORG)
+
+    def test_ninguna_casilla_del_mapa_se_queda_sin_cargar(self):
+        """Toda casilla que use el mapa de una fase tiene que estar CARGADA en
+        la hoja, y no vale mirar si sale negra: la 0x01 se carga a proposito
+        con patron a cero y color 1, o sea negra maciza, y es legitima.
+
+        El truco para distinguir una cosa de la otra es arrancar la VRAM
+        rellena de 0xAA -un valor que ningun volcado escribe- y ver cual sigue
+        sin tocar. Asi salieron los rios y los puentes: las casillas 0x3F a
+        0x4B no las carga la fase, las carga `monta_el_marcador`, y sin esa
+        llamada la lamina publicaba franjas negras de lado a lado.
+        """
+        m = self.mapas
+        vacio = bytes([0xAA]) * 8      # un valor que ningun volcado escribe
+        heredada = bytearray(bytes([0xAA]) * 0x3800)
+        for fase in range(8):
+            heredada = m.vram_de_la_fase(self.rom, fase, heredada)
+            usados = set(v for fila in m.monta_la_fase(self.rom, fase)
+                         for v in fila)
+            sin = sorted(v for v in usados
+                         if heredada[0x2000 + v * 8:0x2008 + v * 8] == vacio)
+            self.assertEqual(sin, [], "fase %d: casillas sin cargar %s"
+                             % (fase + 1, ["0x%02X" % v for v in sin]))
+
+    def test_cada_tipo_de_bicho_gasta_justo_su_bloque(self):
+        """El nudo que ata la tabla de sprites de 0x7772 con el banco de
+        patrones de 0xA993: los dos cuelgan del MISMO nibble del tipo. Si la
+        pareja es la que decimos, los patrones que piden las entradas de un
+        tipo tienen que ser exactamente los que trae su bloque -ni uno de mas
+        ni uno de menos-, y eso pasa en los dieciseis. Sin esta pareja los
+        bichos se dibujan con la hoja equivocada y salen en negro."""
+        import sprites
+        for tipo, entradas in sprites.TIPOS:
+            n = len(sprites.descomprime(
+                self.rom, self.rom.w(sprites.BANCO_DE_ENEMIGOS + 2 * tipo))) // 32
+            pedidos = set()
+            for k in entradas:
+                p = self.rom.w(sprites.ENEMIGOS + 2 * k)
+                for j in range(2):
+                    if self.rom.b(p + 4 * j + 3) & 0x0F == 0:
+                        continue          # color 0: ese sprite no se ve
+                    b = self.rom.b(p + 4 * j + 2)
+                    pedidos.add((b & 0x0F) // 4)    # 0x10 en adelante: el espejo
+            self.assertEqual(sorted(pedidos), list(range(n)),
+                             "tipo %d: su bloque trae %d patrones y sus "
+                             "entradas piden %s" % (tipo, n, sorted(pedidos)))
+
+
 if __name__ == "__main__":
     unittest.main()

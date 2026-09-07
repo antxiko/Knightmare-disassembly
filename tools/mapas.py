@@ -68,6 +68,23 @@ TABLA_GRAFICOS = 0x563C       # ocho entradas de cuatro bytes
 TRAMOS = 10
 BANDAS = 7
 
+# LA HOJA DE CASILLAS NO ES SOLO LA DE LA FASE. Antes de montarla, 0x41C2 y
+# 0x5A46 llaman a `monta_el_marcador` (0x565C), que sube OTRO bloque de 41
+# casillas -de la 0x27 a la 0x4F- y su copia espejada en la 0x87. Ese bloque no
+# es solo el rotulo de arriba: ahi estan tambien los RIOS y los PUENTES, que
+# son iguales en las ocho fases. Y detras, tres casillas de marco en la 0xA0.
+#
+# El orden importa, y es el de la maquina: primero el marcador, y encima las
+# casillas de la fase, que pisan de la 0x87 a la 0x9F la copia espejada de
+# aquel. Al reves saldrian rotas.
+MARCADOR_PAT = 0xB17B         # descomprime a 0x2138 -> casilla 0x27
+MARCADOR_COL = 0xB285         # y a 0x0138; la copia va a 0x2438 / 0x0438
+MARCO_PAT = 0xB2FB            # a 0x2500 -> casilla 0xA0, tres casillas
+MARCO_COL = 0xB314            # a 0x0500
+EXTRA7_PAT = 0xBE41           # solo la fase 7: a 0x2470 -> casilla 0x8E
+EXTRA7_COL = 0xBEB7           # y a 0x0470
+FUENTE = 0x45C9               # 0x45B5 la sube a 0x2080 -> casilla 0x10
+
 # La paleta del TMS9918, en el orden de los codigos del VDP.
 PALETA = [(0, 0, 0), (0, 0, 0), (33, 200, 66), (94, 220, 120),
           (84, 85, 237), (125, 118, 252), (212, 82, 77), (66, 235, 245),
@@ -134,26 +151,86 @@ def vuelve_los_bits(b):
     return r
 
 
-def casillas_de_la_fase(rom, fase):
-    """La hoja de 256 casillas tal como queda en la VRAM.
+def en_los_tres_bancos(v, destino, datos, espejo=False):
+    """`descomprime_en_los_tres_bancos` (0x43D1): el mismo guion en los tres
+    tercios, 0x800 mas alla cada vez. Con espejo, `vuelca_el_guion_en_los_tres_tercios`
+    (0x43E1), que ademas da la vuelta a los ocho bits de cada byte."""
+    if espejo:
+        datos = bytes(vuelve_los_bits(x) for x in datos)
+    for k in range(3):
+        i = destino + k * 0x800
+        v[i:i + len(datos)] = datos
 
-    0x5504 descomprime los patrones en 0x2280 -o sea la casilla 0x50- y 0x550A
-    vuelve a soltar el MISMO guion, espejado, en 0x2580, que es la casilla
-    0xB0. El color se descomprime dos veces sin espejar, en 0x0280 y 0x0580:
-    dar la vuelta a una fila de ocho pixeles no cambia sus colores.
+
+def vram_de_la_fase(rom, fase, v=None):
+    """Los 0x3800 primeros bytes de la VRAM tal como los deja `monta_la_fase`.
+
+    Esta es LA hoja de casillas, y no hay otra: de aqui salen tanto las
+    imagenes como el cotejo contra el emulador (tools/coteja_vram.py la
+    importa). La geometria va al reves de lo normal -R3 = 0x7F y R4 = 0x07 en
+    los ocho bytes de 0x44C5-: el color en 0x0000, los patrones en 0x2000.
+
+    Los cinco volcados, en el orden en que los hace el cartucho:
+
+      * 0x4595 las dieciseis primeras casillas: patron a cero y un color cada
+        una, o sea dieciseis casillas macizas de un color;
+      * 0x45B5 la fuente en 0x2080 -la casilla 0x10-, blanca sobre transparente;
+      * 0x565C el marcador y el marco. NO es solo el rotulo de abajo: en esas
+        41 casillas de la 0x27 a la 0x4F estan los RIOS y los PUENTES del
+        decorado, iguales en las ocho fases. Se cargan tambien espejadas en la
+        0x87, y encima van tres casillas de marco en la 0xA0;
+      * 0x54F8 las casillas de la fase en la 0x50 y su copia espejada en la
+        0xB0 -que pisa de la 0x87 a la 0x9F lo que dejo el marcador-; el color
+        se descomprime dos veces SIN espejar, que dar la vuelta a una fila de
+        ocho pixeles no cambia sus colores;
+      * 0x553E las nueve casillas de mas de la fase 7, y solo de ella.
+
+    Se le puede pasar la VRAM que habia antes, y hay que hacerlo: el cartucho
+    NO borra los patrones ni el color al cambiar de fase, solo la tabla de
+    nombres. Las fases 1, 2 y 4 traen menos casillas que la 0 -61, 59 y 79
+    contra 80-, asi que lo que sobra se queda de la anterior.
     """
+    v = bytearray(0x3800) if v is None else bytearray(v)
+
+    en_los_tres_bancos(v, 0x2000, bytes(0x80))
+    for n in range(16):
+        en_los_tres_bancos(v, 0x0000 + n * 8, bytes([n]) * 8)
+
+    en_los_tres_bancos(v, 0x2080, descomprime(rom, FUENTE))
+    en_los_tres_bancos(v, 0x0080, bytes([0xF0]) * 0x118)
+
+    en_los_tres_bancos(v, 0x2138, descomprime(rom, MARCADOR_PAT))
+    en_los_tres_bancos(v, 0x2438, descomprime(rom, MARCADOR_PAT), espejo=True)
+    en_los_tres_bancos(v, 0x0138, descomprime(rom, MARCADOR_COL))
+    en_los_tres_bancos(v, 0x0438, descomprime(rom, MARCADOR_COL))
+    en_los_tres_bancos(v, 0x2500, descomprime(rom, MARCO_PAT))
+    en_los_tres_bancos(v, 0x0500, descomprime(rom, MARCO_COL))
+
     a = TABLA_GRAFICOS + 4 * fase
     pat = descomprime(rom, rom.w(a))
-    banco = 1 if fase == 3 else 2 if fase == 7 else 0
-    col = descomprime(rom, rom.w(a + 2), banco)
-    hoja_p, hoja_c = bytearray(256 * 8), bytearray(256 * 8)
-    for i, v in enumerate(pat):
-        hoja_p[0x50 * 8 + i] = v
-        hoja_p[0xB0 * 8 + i] = vuelve_los_bits(v)
-    for i, v in enumerate(col):
-        hoja_c[0x50 * 8 + i] = v
-        hoja_c[0xB0 * 8 + i] = v
-    return hoja_p, hoja_c
+    bank = 1 if fase == 3 else 2 if fase == 7 else 0
+    col = descomprime(rom, rom.w(a + 2), bank)
+    en_los_tres_bancos(v, 0x2280, pat)
+    en_los_tres_bancos(v, 0x2580, pat, espejo=True)
+    en_los_tres_bancos(v, 0x0280, col)
+    en_los_tres_bancos(v, 0x0580, col)
+
+    if fase == 7:
+        en_los_tres_bancos(v, 0x2470, descomprime(rom, EXTRA7_PAT))
+        en_los_tres_bancos(v, 0x2770, descomprime(rom, EXTRA7_PAT), espejo=True)
+        en_los_tres_bancos(v, 0x0470, descomprime(rom, EXTRA7_COL))
+        en_los_tres_bancos(v, 0x0770, descomprime(rom, EXTRA7_COL))
+    return v
+
+
+def casillas_de_la_fase(rom, fase, heredada=None):
+    """Las 256 casillas de un banco, sacadas de la VRAM que monta la fase.
+
+    Las tres bandas del SCREEN 2 llevan la misma hoja -todos los volcados van
+    `en_los_tres_bancos`-, asi que con el primer tercio basta.
+    """
+    v = vram_de_la_fase(rom, fase, heredada)
+    return v[0x2000:0x2800], v[0x0000:0x0800]
 
 
 def dibuja_casilla(px, ancho, x0, y0, pat, col, n):
@@ -221,8 +298,15 @@ def main():
     salida = sys.argv[3]
     fases = [int(sys.argv[4])] if len(sys.argv) > 4 else range(8)
     os.makedirs(salida, exist_ok=True)
-    for fase in fases:
-        pat, col = casillas_de_la_fase(rom, fase)
+    # la hoja se hereda de una fase a la siguiente, como en la partida: el
+    # cartucho no borra los patrones al cambiar de fase, y las fases 2, 3 y 5
+    # traen menos casillas que la 1
+    heredada = None
+    for fase in range(8):
+        pat, col = casillas_de_la_fase(rom, fase, heredada)
+        heredada = vram_de_la_fase(rom, fase, heredada)
+        if fase not in fases:
+            continue
         filas = monta_la_fase(rom, fase)
         w, h = 32 * 8, len(filas) * 8
         px = bytearray(w * h * 3)

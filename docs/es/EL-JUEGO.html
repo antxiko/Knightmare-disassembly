@@ -89,27 +89,35 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p><em>La pantalla del titulo, montada ejecutando los pasos de <code>monta_el_titulo</code> (0x47BA). El rotulo grande son 33 casillas —once por tres— que un bucle escribe seguidas desde la 0x60.</em></p>
 <h2 id="las-ocho-fases-enteras">Las ocho fases, enteras</h2>
 <p>Cada fase es una tira vertical de <b>61 bandas de cuatro filas</b>, o sea 244 filas de casillas. No esta guardada como un mapa: se monta bloque a bloque.</p>
-<p><img src="../imagenes/fase_1.png?v=a2deabca" alt="La fase 1"></p>
-<p><em>La fase 1 entera. Sale de los codigos de bloque de <code>0x9E51</code> y de los bloques de 4x4 casillas de <code>0x9A6D</code>.</em></p>
+<p>Aqui estan <b>las ocho</b>, de arriba abajo y a tamano real: 256 x 1952 pixeles cada una. Salen de los codigos de bloque de cada fase y de los bloques de 4x4 casillas de <code>0x9A6D</code>; ni una es una captura de pantalla.</p>
+<table><tr><th></th><th></th><th></th><th></th></tr><tr><td><img src="../imagenes/fase_1.png?v=a8c20bcb" alt="La fase 1"></td><td><img src="../imagenes/fase_2.png?v=8e9dc424" alt="La fase 2"></td><td><img src="../imagenes/fase_3.png?v=b160087b" alt="La fase 3"></td><td><img src="../imagenes/fase_4.png?v=1aee75c7" alt="La fase 4"></td></tr><tr><td><b>Fase 1</b></td><td><b>Fase 2</b></td><td><b>Fase 3</b></td><td><b>Fase 4</b></td></tr><tr><td><img src="../imagenes/fase_5.png?v=60c89462" alt="La fase 5"></td><td><img src="../imagenes/fase_6.png?v=239194cb" alt="La fase 6"></td><td><img src="../imagenes/fase_7.png?v=a8c34c54" alt="La fase 7"></td><td><img src="../imagenes/fase_8.png?v=c9434f05" alt="La fase 8"></td></tr><tr><td><b>Fase 5</b></td><td><b>Fase 6</b></td><td><b>Fase 7</b></td><td><b>Fase 8</b></td></tr></table>
+<p>Se leen de abajo arriba, que es como se juegan: Popolon entra por el borde de abajo y sube. La banda de arriba del todo es la puerta del jefe.</p>
 <p>El montador es <code>0x6502</code> y trabaja asi:</p>
 <ul><li>La fase se parte en <b>diez tramos</b>, y cada tramo en <b>siete bandas</b> de cuatro filas.</li><li>Cada banda son <b>ocho grupos de cuatro columnas</b>. De cada grupo sale un codigo de bloque: los siete bits bajos indexan la tabla de <code>0x99ED</code> —64 punteros a bloques de 4x4 casillas— y <b>el bit 7 dice que el bloque va espejado</b>.</li><li>Detras de cada grupo, un <code>rl</code> saca un bit de un mapa de bits: con el bit puesto el puntero avanza al bloque siguiente, y con el a cero <b>se repite el bloque anterior</b>. Ahi esta la compresion del decorado.</li></ul>
 <p>Y los bloques <b>se solapan entre si</b>: <code>0x9C21</code> y <code>0x9C3E</code> caen a medio bloque de otro, asi que un mismo tramo de bytes sirve de dos bloques distintos.</p>
+<h2 id="los-rios-y-los-puentes-no-son-de-la-fase">Los rios y los puentes no son de la fase</h2>
+<p>La hoja de casillas de una fase <b>no la carga sola la fase</b>. Antes de montarla, <code>monta_el_marcador</code> (<code>0x565C</code>) sube otro bloque de 41 casillas —de la <code>0x27</code> a la <code>0x4F</code>— y su copia espejada en la <code>0x87</code>. Ese bloque no es solo el rotulo de abajo: ahi estan <b>los rios y los puentes</b>, que son iguales en las ocho fases, y por eso el mapa de cualquiera de ellas los usa sin traerlos.</p>
+<p>El orden importa: primero el marcador y <b>encima</b> las casillas de la fase, que pisan de la <code>0x87</code> a la <code>0x9F</code> la copia espejada de aquel. Montar la hoja solo con las casillas de la fase deja los puentes y los rios en negro.</p>
 <h2 id="tres-decorados-de-un-solo-guion-de-color">Tres decorados de un solo guion de color</h2>
-<p><img src="../imagenes/fase_4.png?v=9f5a86da" alt="La fase 4"></p>
-<p><em>La fase 4 usa las MISMAS casillas que la 1. Lo que cambia es la paleta.</em></p>
-<p>Las fases 0, 3 y 7 comparten el guion de patrones <b>y</b> el de color. Lo que las distingue es <code>(0xE661)</code>: el lector de bloques (<code>0x443B</code>) traduce cinco codigos de color —0xE1, 0xEC, 0xE8, 0xE6 y 0xE5— restandoles 0x50, y otros 0x50 mas si el banco es el 2. Un bloque de 640 bytes da los tres decorados.</p>
+<p>La fase 4 usa las MISMAS casillas que la 1. Lo que cambia es la paleta. Las fases 0, 3 y 7 comparten el guion de patrones <b>y</b> el de color. Lo que las distingue es <code>(0xE661)</code>: el lector de bloques (<code>0x443B</code>) traduce cinco codigos de color —0xE1, 0xEC, 0xE8, 0xE6 y 0xE5— restandoles 0x50, y otros 0x50 mas si el banco es el 2. Un bloque de 640 bytes da los tres decorados.</p>
 <p>Las fases 5 y 6 van mas lejos: comparten casillas y color, y <b>solo se diferencian en el mapa</b>.</p>
 <h2 id="popolon-son-tres-sprites">Popolon son tres sprites</h2>
-<p><img src="../imagenes/jugador.png?v=d5db067a" alt="Los fotogramas del muneco"></p>
+<p><img src="../imagenes/jugador.png?v=20c058b4" alt="Los fotogramas del muneco"></p>
 <p><em>Los doce fotogramas. Los cuatro ultimos son la explosion.</em></p>
 <p>El muneco se pinta con <b>tres sprites de 16x16</b> superpuestos: <code>0x5E2D</code> los escribe con los patrones 0, 1 y 2. Los dos primeros los sube el fotograma —cada uno ocupa <b>64 bytes justos</b>, o sea dos patrones— y el tercero es el primero del banco fijo de la fase. La <code>y</code> de cada uno y su color salen de un bloque de seis bytes: tres parejas <code>[ajuste de y][color]</code>.</p>
 <p>Hay siete animaciones en la tabla de <code>0xA5B4</code>, y una de ellas —la 2— alterna sus colores con los de <code>0xA5EF</code> para hacer el parpadeo de invulnerable.</p>
 <h2 id="el-bestiario-no-cabe-entero">El bestiario no cabe entero</h2>
-<p><img src="../imagenes/banco_de_enemigos.png?v=bd21ab0e" alt="El banco de enemigos"></p>
-<p><em>Los 45 patrones de los dieciseis bloques de <code>0xA993</code>.</em></p>
+<p><img src="../imagenes/banco_de_enemigos.png?v=3f90c326" alt="El banco de enemigos"></p>
+<p><em>Los dieciseis tipos de bicho, uno por bloque de <code>0xA993</code>, con el color que les pone la tabla de <code>0x7772</code>.</em></p>
 <p>La hoja de sprites del MSX son 64 patrones de 16x16 y no llegan, asi que el cartucho tiene <b>tres ranuras</b> —VRAM <code>0x1D00</code>, <code>0x1E00</code> y <code>0x1F00</code>— que va recargando por turno: <code>0x78F9</code> descomprime cuatro patrones en la que toque y se lleva ademas el numero de patron base, que luego se le suma a cada sprite del bicho.</p>
-<p>Cada enemigo se pinta con <b>dos sprites</b>, y el par sale de la tabla de <code>0x7772</code>: 38 bloques de ocho bytes con dos entradas <code>[dy][dx][patron][color]</code>.</p>
-<p><img src="../imagenes/sprites_fase.png?v=138c1012" alt="Las armas y los objetos"></p>
+<p>Cada enemigo se pinta con <b>dos sprites</b>, y el par sale de la tabla de <code>0x7772</code>: 38 bloques de ocho bytes con dos entradas <code>[dy][dx][patron][color]</code>. De la entrada 5 en adelante el byte de patron es <b>relativo</b> —<code>0x7755</code> compara con 5 y solo entonces le suma <code>(ix+0x16)</code>—, asi que un bicho no se puede dibujar sin saber en que ranura esta cargado.</p>
+<p>Y se puede saber, porque el tipo manda las dos cosas: <code>(iy+0) &amp; 0x0F</code> es lo que <code>0x7914</code> usa para elegir el bloque de <code>0xA993</code>, y es tambien lo que <code>0x75E5</code> usa para elegir la subtabla de <code>0x75F3</code> cuyas rutinas escriben <code>(ix+0x0A)</code>, que es la entrada de <code>0x7772</code>. Atando esas dos puntas <b>cuadra solo</b>: los patrones que piden las entradas de cada tipo son exactamente los que trae su bloque, ni uno de mas ni uno de menos, en los dieciseis.</p>
+<p><img src="../imagenes/enemigos.png?v=286af662" alt="Los enemigos"></p>
+<p><em>Los 42 fotogramas de la tabla de <code>0x7772</code>, cada uno con el bloque de su tipo cargado en la ranura. El fondo es gris a proposito: la mayoria de los bichos son siluetas de color 1, o sea NEGRAS.</em></p>
+<p>De los dos sprites de un bicho gana el <b>primero</b>: <code>0x772A</code> los escribe en atributos seguidos, y en el TMS9918 el plano de numero mas bajo tapa al otro. Pintados al reves, el relleno macizo se come la silueta.</p>
+<p><img src="../imagenes/armas.png?v=5b316451" alt="Las armas"></p>
+<p><em>Las siete armas de la tabla de <code>0x63FB</code>, pareja <code>[patron][color]</code>. Solo las dos ultimas se animan: <code>0x636D</code> les saca cuatro fotogramas con un <code>and 003h</code>.</em></p>
+<p><img src="../imagenes/sprites_fase.png?v=3e7633f4" alt="Las armas y los objetos"></p>
 <p><em>Los 37 patrones fijos que <code>0x54BE</code> sube al empezar cada fase: las armas, los disparos y los objetos. Iguales en las ocho fases.</em></p>
 <h2 id="el-marcador-y-el-reloj-del-jefe">El marcador y el reloj del jefe</h2>
 <p><img src="../imagenes/pantalla_fase1.png?v=a395543c" alt="La primera pantalla de la fase 1"></p>
