@@ -25,6 +25,25 @@ They are two data typos, not disassembly slips: the bytes are what they are.
 What they do is a tug on the path of anything aiming at exactly those two
 angles. A test watches them.
 
+### And Twin Bee fixed one of them
+
+The 255 table at `0x844E` is **the same table** Twin Bee (RC-740) carries at
+`0xB950`, one catalogue number later. Out of 65 bytes only **three** differ,
+and those three are exactly the ones that were wrong here:
+
+| k | Knightmare | Twin Bee | 255·cos(k·90/64) |
+|---|---|---|---|
+| 56 | 46 | 48 | 50 |
+| 58 | 47 | 37 | 37 |
+| 64 | 1 | 0 | 0 |
+
+Twin Bee puts 37 at k=58 -which is what the function asks for, and what stops
+the table from going up- and cos(90) back to zero. What it does **not** fix is
+entry 46, which holds 105 where 109 belongs in both cartridges: that one does
+not break monotonicity, and that is presumably why nobody saw it.
+
+The 128 table at `0x848F` is not in Twin Bee at all.
+
 ## A cheat that asks for left and right at once
 
 `0x6F44` is called **exactly once**, from `0x4182`, right after the game is

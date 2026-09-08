@@ -24,6 +24,25 @@ Son dos erratas de los datos, no del desensamblado: los bytes son los que son.
 Lo que hacen es un tiron en el recorrido de lo que apunte justo a esos dos
 angulos. Un test las vigila.
 
+### Y Twin Bee arreglo una de ellas
+
+La tabla de 255 de `0x844E` es **la misma tabla** que Twin Bee (RC-740) lleva
+en `0xB950`, un numero de catalogo mas adelante. De los 65 bytes solo se
+diferencian **tres**, y esos tres son justo los que aqui estaban mal:
+
+| k | Knightmare | Twin Bee | 255·cos(k·90/64) |
+|---|---|---|---|
+| 56 | 46 | 48 | 50 |
+| 58 | 47 | 37 | 37 |
+| 64 | 1 | 0 | 0 |
+
+Twin Bee pone 37 en k=58 -que es lo que pide la funcion, y lo que evita que la
+tabla suba- y devuelve cos(90) a cero. Lo que **no** arregla es la entrada 46,
+que vale 105 donde tocaria 109 en los dos cartuchos: esa no rompe la
+monotonia, y por eso, se supone, nadie la vio.
+
+La tabla de 128 de `0x848F` no esta en Twin Bee.
+
 ## Un truco que pide izquierda y derecha a la vez
 
 `0x6F44` se llama **una sola vez**, desde `0x4182`, justo despues de poner la
