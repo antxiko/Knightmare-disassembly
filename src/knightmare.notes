@@ -140,8 +140,8 @@ D 0x48FA 0x4901 color_del_rotulo  Comprimido; 0x7F + 0x7F + 0x0A = 264 bytes de 
 # el codigo de AQUI, y las que no cuadraban -direcciones del otro cartucho,
 # tamanos distintos- estan corregidas.
 B 0x4025 EL ARRANQUE DEL TITULO, con un escribe-en-la-ROM que no hace nada
-C 0x4025 0xC9E1 son, puestos en memoria, los bytes E1 C9: `pop hl / ret`
-C 0x4028 pero 0x4112 es la ROM del propio cartucho, asi que este escribe SE PIERDE. Si tuviera efecto, convertiria el `djnz` de 0x4112 en un `pop hl / ret`
+C 0x4025 0xC9E1 son, puestos en memoria, los bytes E1 C9: `pop hl` / `ret`
+C 0x4028 PROTECCION ANTICOPIA: los bytes 0xE1 0xC9 son `pop hl` y `ret`, y van encima del `djnz` de 0x4112. Desde ROM la escritura NO llega -la ROM no admite escritura- y por eso parece codigo muerto; en una copia cargada en RAM si cuela, y la cadena de la presentacion se corta ahi. Manuel Pazos la identifico en el RC-727, donde esta escrita byte a byte, como ReadKeys_AC
 C 0x402B y sigue montando la pantalla del titulo
 B 0x402E EL GANCHO DE LA INTERRUPCION: aqui cuelga el cuadro entero
 C 0x402E RDVDP borra la peticion de interrupcion del VDP; si no se lee, el VDP la mantiene
@@ -153,8 +153,8 @@ C 0x4041 y el cuadro
 C 0x4048 segunda lectura del VDP, ya de salida
 C 0x404D y si el bit 7 dice que hubo colision o quinto sprite, otra pasada de sonido
 B 0x4052 PONER UN REGISTRO DEL VDP, con otro escribe-en-la-ROM
-C 0x4052 otra vez lo mismo: 0x411E cae dentro del `jp L_4187` de 0x411D, y es ROM
-C 0x4055 asi que el escribe se pierde. De tener efecto, dejaria ahi un `jp 00000h`, o sea un reinicio
+C 0x4052 HL a cero: es lo que va a escribir la linea siguiente
+C 0x4055 LA OTRA PROTECCION ANTICOPIA: el cero cae en 0x411E, que no es un dato sino el operando del `jp` de 0x411D. Desde ROM no llega; en RAM ese salto se queda en `jp 00000h`, o sea un reinicio en seco. Es la pareja de la de 0x4028, y en el RC-727 son VRAM_writeAC y ReadKeys_AC
 C 0x4058 lo que si hace es escribir el registro: b el valor, c el numero
 B 0x405B LAS DOS SUMAS DE 16 BITS QUE USA TODO EL CARTUCHO
 C 0x405B hl += a, sin signo

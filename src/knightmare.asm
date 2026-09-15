@@ -59,8 +59,8 @@ DATA_punteros_del_game_master:
 ; EL ARRANQUE DEL TITULO, con un escribe-en-la-ROM que no hace nada
 ; ----------------------------------------------------------------------
 prepara_el_titulo:
-	ld hl,0c9e1h		;4025   ; 0xC9E1 son, puestos en memoria, los bytes E1 C9: `pop hl / ret`
-	ld (04112h),hl		;4028   ; pero 0x4112 es la ROM del propio cartucho, asi que este escribe SE PIERDE. Si tuviera efecto, convertiria el `djnz` de 0x4112 en un `pop hl / ret`
+	ld hl,0c9e1h		;4025   ; 0xC9E1 son, puestos en memoria, los bytes E1 C9: `pop hl` / `ret`
+	ld (04112h),hl		;4028   ; PROTECCION ANTICOPIA: los bytes 0xE1 0xC9 son `pop hl` y `ret`, y van encima del `djnz` de 0x4112. Desde ROM la escritura NO llega -la ROM no admite escritura- y por eso parece codigo muerto; en una copia cargada en RAM si cuela, y la cadena de la presentacion se corta ahi. Manuel Pazos la identifico en el RC-727, donde esta escrita byte a byte, como ReadKeys_AC
 	jp monta_el_cartel		;402b   ; y sigue montando la pantalla del titulo
 
 ; ----------------------------------------------------------------------
@@ -91,8 +91,8 @@ L_4048:
 ; PONER UN REGISTRO DEL VDP, con otro escribe-en-la-ROM
 ; ----------------------------------------------------------------------
 pon_registro_del_vdp:
-	ld hl,00000h		;4052   ; otra vez lo mismo: 0x411E cae dentro del `jp L_4187` de 0x411D, y es ROM
-	ld (0411eh),hl		;4055   ; asi que el escribe se pierde. De tener efecto, dejaria ahi un `jp 00000h`, o sea un reinicio
+	ld hl,00000h		;4052   ; HL a cero: es lo que va a escribir la linea siguiente
+	ld (0411eh),hl		;4055   ; LA OTRA PROTECCION ANTICOPIA: el cero cae en 0x411E, que no es un dato sino el operando del `jp` de 0x411D. Desde ROM no llega; en RAM ese salto se queda en `jp 00000h`, o sea un reinicio en seco. Es la pareja de la de 0x4028, y en el RC-727 son VRAM_writeAC y ReadKeys_AC
 	jp 00047h		;4058   ; BIOS WRTVDP - Writes data in the VDP-register | lo que si hace es escribir el registro: b el valor, c el numero
 
 ; ----------------------------------------------------------------------
