@@ -399,12 +399,12 @@ D 0x794A 0x7950 espejos_de_las_ranuras  Y donde 0x7935 deja la copia espejada: 0
 F 0x794A w
 D 0x7950 0x7953 patrones_base_de_las_ranuras  0xA0, 0xC0 y 0xE0, que son 0x1D00, 0x1E00 y 0x1F00 contados en numero de patron. Es lo que 0x790C guarda en (iy+7) y acaba sumandose en 0x775D
 F 0x7950 3
-D 0x6A7F 0x6A8E tabla_de_tipos_de_enemigo  Quince valores; 0x6A48 la indexa con los cuatro bits bajos del tipo y el resultado va a (ix+8)
+D 0x6A7F 0x6A8E disparos_que_aguanta_cada_tipo  Quince valores; 0x6A48 la indexa con los cuatro bits bajos del tipo y el resultado va a (ix+8). Los dos ultimos (13 y 14, que ningun registro usa) son a la vez la primera pareja de la tabla de saltos de 0x6A8C
 F 0x6A7F 15
-D 0x6A8E 0x6A98 sin_identificar_6A8E  Diez bytes delante de la tabla de fases
-D 0x6A98 0x6AF8 enemigos_por_fase  Ocho entradas de doce bytes -0x55A3 indexa con (0xE062)*12-: una palabra con la base de los registros de enemigo de esa fase y diez bytes, uno por tramo, con el indice del primer enemigo de cada uno
+D 0x6A8E 0x6A98 saltos_del_cartel_exit  Las otras cinco parejas [fila][fases de mas] de la tabla de 0x6A8C, que 0x6994 recorre para saber cuantas fases salta cada EXIT: las seis filas son las de los seis registros de tipo 0x15
+D 0x6A98 0x6AF8 objetos_por_fase  Ocho entradas de doce bytes -0x55A3 indexa con (0xE062)*12-: una palabra con la base de los objetos de esa fase y diez bytes, uno por tramo, con el indice del primero de cada uno
 F 0x6A98 w,10
-D 0x6AF8 0x6F44 registros_de_enemigo  Tres bytes cada uno -tipo, y, x-, agrupados por fase. 0x6A1E los lee: el tipo da (ix+0) y, por la tabla de 0x6A7F, (ix+8)
+D 0x6AF8 0x6F44 objetos_de_la_fase  356 registros de tres bytes -tipo, fila, x-, agrupados por fase (36, 42, 42, 46, 52, 50, 45 y 43); los ultimos 32 bytes (0x6F24) son los ocho dibujos de 2x2 que pintan: los cuatro pergaminos, el bloque gris, el cartel EXIT, el bloque blanco y el interrogante. 0x6A1E los lee: el tipo da (ix+0) y, por la tabla de 0x6A7F, (ix+8). La fila es la de (0xE091) a la que nace, y en el mapa cae en la 220 - fila (medido, tools/objetos.py)
 F 0x6AF8 3
 
 # ======================================================================
@@ -994,8 +994,13 @@ C 0x61ac el segundo: abajo
 C 0x61ca el tercero: izquierda
 C 0x61c7 y aqui la horizontal
 C 0x61ed y el cuarto: derecha
-B 0x620c DEJA PASAR ESTA CASILLA? Las casillas de 0x43 a 0x7F y las de 0xA3 a
-B 0x620c 0xDF son suelo; el resto, pared. Devuelve el acarreo puesto si se pasa.
+B 0x620c ESTORBA ESTA CASILLA? Las casillas de 0x43 a 0x7F y las de 0xA3 a
+B 0x620c 0xDF -su copia espejada- son PARED, y devuelve el acarreo puesto si
+B 0x620c estorba: 0x6163 solo devuelve al muneco a su sitio cuando las dos
+B 0x620c casillas de ese lado salen con acarreo. Lo demuestra el mapa: el agua
+B 0x620c (0x43, 0x67) bloquea y el puente (0x3F-0x42) se pisa. Por eso el bloque
+B 0x620c gris de 0x6F34 (0x4C-0x4F) cierra el paso y el interrogante (0x2A-0x2D),
+B 0x620c los pergaminos y el cartel EXIT se pisan.
 L 0x620c se_puede_pisar
 C 0x620c de 0x43 arriba...
 C 0x620e ...y menos de 0x3D mas alla: 0x43..0x7F
@@ -1187,11 +1192,16 @@ C 0x6854 por ocho
 # ======================================================================
 C 0x6859 mas el centro
 C 0x685e y el paso queda en (0xE294)
-B 0x6862 UN BICHO DE LA LISTA DE 0xE4F0. Ocho ranuras de 0x10 bytes: son los
-B 0x6862 que la fase siembra por filas, no los que salen de los generadores. Su
-B 0x6862 estado esta en (ix+0): a cero espera a que llegue su fila, y con el
-B 0x6862 bit 7 puesto ya lo han matado.
-L 0x6862 haz_un_bicho
+B 0x6862 UN OBJETO DE LA LISTA DE 0xE4F0: los interrogantes, los bloques grises,
+B 0x6862 los puentes, los carteles EXIT y los pasadizos. Ocho ranuras de 0x10
+B 0x6862 bytes: son los que la fase siembra por filas (0x6AF8), no los bichos de
+B 0x6862 los generadores. (ix+0) es el tipo: a cero espera a que llegue su fila;
+B 0x6862 con el bit 5 nace visible y sin el esta ESCONDIDO hasta el primer
+B 0x6862 disparo, que es cuando (ix+1) deja de ser cero y se pinta el
+B 0x6862 interrogante de 0x6F40; con el bit 7 ya esta roto y se reparte por sus
+B 0x6862 tres bits bajos lo que suelta (0x6909). Los tipos 0x17 en adelante nacen
+B 0x6862 ya rotos con el 7: son los pasadizos.
+L 0x6862 haz_un_objeto_de_la_lista
 C 0x6862 el numero de ranura, que hace falta luego
 C 0x6869 con el bit 7 puesto esta muriendose
 C 0x686d a cero, todavia no ha salido
@@ -1211,10 +1221,10 @@ C 0x68c3 un impacto mas
 C 0x68c9 hasta los que aguanta (ix+8)
 C 0x68cd y entonces se muere
 C 0x68d1 con su sonido
-L 0x68d6 bicho_muriendose
+L 0x68d6 objeto_roto
 C 0x68d7 los tres bits bajos dicen que premio deja
-C 0x68dd el recorrido de la muerte, el de 0x6F24
-C 0x68e9 o el de 0x6F3C si lleva el bit 6
+C 0x68dd el pergamino que deja: amarillo, cian, azul o rojo, de 0x6F24 en adelante
+C 0x68e9 o el bloque blanco de 0x6F3C si ya se recogio (bit 6)
 C 0x68ef con el bit 6 ya se conto
 C 0x68f4 mira si toca al muneco
 C 0x68fd marcado, para no contarlo dos veces
@@ -1230,8 +1240,8 @@ C 0x694e su sonido
 C 0x6956 el reloj de la congelacion
 C 0x695e y el aviso de que hay que cambiar de musica
 C 0x6974 y borra los ocho enemigos de 0xE200
-L 0x6983 deja_su_dibujo
-L 0x698a el_pergamino
+L 0x6983 deja_el_bloque_gris
+L 0x698a el_cartel_exit
 C 0x698a su dibujo
 C 0x6990 si el muneco lo toca
 C 0x6994 la tabla de 0x6A8C, seis parejas
@@ -1239,23 +1249,25 @@ C 0x6999 busca el que casa con (ix+9)
 C 0x69a4 y salta esas fases: se le suman a (0xE061) en BCD y a (0xE062) tal cual
 C 0x69b2 (0xE00D) avisa a la escena de que hay salto de fase
 C 0x69b5 y su sonido
-L 0x69bc deja_un_dibujo_de_cuatro_por_cuatro
+L 0x69bc deja_un_puente
 C 0x69c0 por debajo de la fila 0xD0 no se pinta
-C 0x69cd el dibujo de 0x9A9C, de cuatro por cuatro casillas
-L 0x69d5 la_puerta
+C 0x69cd el puente de 0x9A9C, cuatro por cuatro casillas, dos filas arriba y una columna a la izquierda
+L 0x69d5 el_pasadizo_lateral
 C 0x69d8 por debajo de 0xB0 no se puede tocar
-C 0x69df el nibble alto de (ix+8) por dos: el ancho de la caja
+C 0x69df el nibble alto de (ix+8) por dos: el ALTO de la franja, 32, 64 o 96; el ancho son 8
 C 0x69e5 mira si el muneco esta dentro
 C 0x69ec el bit 0 dice si hace falta izquierda o derecha
-C 0x69fa y da la vuelta a la columna del tramo: por ahi se sale
+C 0x69fa y la x del muneco (0xE604) pasa al otro borde: sale por el otro lado de la pantalla
 L 0x6a04 borra_lo_que_dejo
 C 0x6a0a dos por dos casillas
 C 0x6a0e por debajo de 0xB0 no se toca la pantalla
 L 0x6a16 apaga_la_ranura
-B 0x6a1e MONTAR UN BICHO DE LA LISTA. Los registros de la fase son de tres
-B 0x6a1e bytes: tipo, x y y. El tipo trae en los cuatro bits bajos el indice de
-B 0x6a1e la tabla de 0x6A7F, que da cuantos impactos aguanta.
-L 0x6a1e monta_un_bicho
+B 0x6a1e MONTAR UN OBJETO DE LA LISTA. Los registros de la fase son de tres
+B 0x6a1e bytes: tipo, fila y x. Nace en la fila 0 de la pantalla cuando (0xE091)
+B 0x6a1e iguala su fila, y baja con el decorado (bit 4, 0x648E). El tipo trae en
+B 0x6a1e los cuatro bits bajos el indice de la tabla de 0x6A7F, que da cuantos
+B 0x6a1e disparos aguanta, uno mas si nace visible.
+L 0x6a1e monta_un_objeto
 C 0x6a22 el tipo 0x15 solo sale a partir de la fase que diga (0xE006)
 C 0x6a32 de 0x17 arriba se cambia por 0x97
 C 0x6a3f la columna

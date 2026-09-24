@@ -172,6 +172,49 @@ FASES = [
      "arriba.",
      "<b>Stage 8.</b> The castle, with the final boss waiting on the top "
      "band."),
+    ("fase_1_objetos.png",
+     "<b>Fase 1, con sus objetos.</b> Los 36 registros de la lista de 0x6AF8 "
+     "puestos donde nacen: cada interrogante con marco blanco si es visible y "
+     "magenta punteado si esta escondido, y pegado a el lo que suelta "
+     "(pergamino amarillo una vida, cian 500 puntos, azul bomba, rojo "
+     "congelar; bloque gris; cartel EXIT con su fase de destino; puente). Las "
+     "franjas cian de los bordes son los pasadizos.",
+     "<b>Stage 1, with its objects.</b> The 36 records of the list at 0x6AF8 "
+     "where they are born: each question mark framed white if visible and "
+     "dashed magenta if hidden, and touching it what it drops (yellow scroll "
+     "a life, cyan 500 points, blue bomb, red freeze; grey block; EXIT sign "
+     "with its destination stage; bridge). The cyan strips at the edges are "
+     "the side passages."),
+    ("fase_2_objetos.png",
+     "<b>Fase 2, con sus objetos.</b> 42, y dos salidas: a la 3 y a la 4.",
+     "<b>Stage 2, with its objects.</b> 42 of them, and two exits: to 3 and "
+     "to 4."),
+    ("fase_3_objetos.png",
+     "<b>Fase 3, con sus objetos.</b> 42, con los tres primeros puentes "
+     "escondidos y la salida a la 5.",
+     "<b>Stage 3, with its objects.</b> 42, with the first three hidden "
+     "bridges and the exit to stage 5."),
+    ("fase_4_objetos.png",
+     "<b>Fase 4, con sus objetos.</b> 46: seis puentes, nueve bloques grises "
+     "en filas de tres y la salida a la 6, la ultima.",
+     "<b>Stage 4, with its objects.</b> 46: six bridges, nine grey blocks in "
+     "rows of three and the exit to stage 6, the last one."),
+    ("fase_5_objetos.png",
+     "<b>Fase 5, con sus objetos.</b> 52, la que mas; ya sin salidas.",
+     "<b>Stage 5, with its objects.</b> 52, the most; no exits from here on."),
+    ("fase_6_objetos.png",
+     "<b>Fase 6, con sus objetos.</b> 50, y todos escondidos.",
+     "<b>Stage 6, with its objects.</b> 50, every one of them hidden."),
+    ("fase_7_objetos.png",
+     "<b>Fase 7, con sus objetos.</b> 45, diecinueve de ellos puentes: la del "
+     "agua.",
+     "<b>Stage 7, with its objects.</b> 45, nineteen of them bridges: the "
+     "water stage."),
+    ("fase_8_objetos.png",
+     "<b>Fase 8, con sus objetos.</b> 43, todos escondidos, y trece bloques "
+     "grises.",
+     "<b>Stage 8, with its objects.</b> 43, all hidden, and thirteen grey "
+     "blocks."),
 
 ]
 

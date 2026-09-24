@@ -58,6 +58,9 @@ emulador: **las ocho fases, cero diferencias** en color (6.144 bytes), patrones
   ocho fases.
 - **Tres paletas de un solo guion de color**: las fases 0, 3 y 7 comparten
   casillas y color, y las distingue una traduccion de cinco codigos.
+- **Los bloques no estan en el mapa**: 356 registros `[tipo][fila][x]` siembran
+  los interrogantes, los bloques grises, los puentes y los seis warps EXIT, que
+  solo se abren cuando `(0xE006)` dice que esa fase ya se cerro antes.
 - **La demostracion es una partida grabada**: 118 pulsaciones, una cada ocho
   cuadros.
 

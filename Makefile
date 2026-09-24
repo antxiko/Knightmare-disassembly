@@ -81,6 +81,7 @@ test:
 imagenes: $(ROM)
 	@mkdir -p work/gfx
 	python3 tools/mapas.py $(ROM) $(ORG) work/gfx
+	python3 tools/objetos.py $(ROM) $(ORG) work/gfx
 	python3 tools/sprites.py $(ROM) $(ORG) work/gfx
 	python3 tools/pantallas.py $(ROM) $(ORG) work/gfx
 
@@ -111,6 +112,7 @@ sonda: $(ROM)
 web: $(ROM)
 	@mkdir -p docs/imagenes
 	python3 tools/mapas.py $(ROM) $(ORG) docs/imagenes
+	python3 tools/objetos.py $(ROM) $(ORG) docs/imagenes
 	python3 tools/sprites.py $(ROM) $(ORG) docs/imagenes
 	python3 tools/pantallas.py $(ROM) $(ORG) docs/imagenes
 	python3 tools/md2html.py docs en

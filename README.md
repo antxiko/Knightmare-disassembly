@@ -59,6 +59,9 @@ the 704 tiles of the map.
   stages.
 - **Three palettes out of one colour script**: stages 0, 3 and 7 share tiles
   and colour, and a five-code translation tells them apart.
+- **The blocks are not in the map**: 356 `[type][row][x]` records plant the
+  question marks, the grey blocks, the bridges and the six EXIT warps, which
+  only open once `(0xE006)` says you have completed that stage before.
 - **The demo is a recorded game**: 118 keypresses, one every eight frames.
 
 The lot, with its measurements, in

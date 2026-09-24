@@ -148,6 +148,26 @@ on where you come in.
 `0x704B` is **exactly twice that**. All eight, without a byte to spare or
 missing.
 
+## The warps only open on a second run
+
+Six of the 356 map objects (`0x6AF8`) drop the **EXIT sign**, and touching it
+skips ahead: 1→2, 1→3, 2→3, 2→4, 3→5 and 4→6, by the pairs at `0x6A8C` plus
+the stage the ending adds. But `0x6A22` plants an EXIT only if `(0xE006)` —
+the highest stage completed since power-on, written at `0x4232` — has reached
+the current stage. That counter is **capped at 4** by `0x4236`, exactly the
+last stage with an exit, and nothing but INIT clears it: you have to finish the
+stage once, then find its exit, hidden, thirty shots deep, on the next game.
+
+## The bridges are hidden in the river
+
+Thirty-six of those objects drop a **bridge**: shoot a hidden spot five times
+and `0x69BC` paints the 4x4 planks of `0x9A9C` around it — nineteen of them in
+stage 7, the water one. And the grey blocks are the opposite trick: a question
+mark that, once broken, leaves a **wall** (`0x6F34`, tiles `0x4C-0x4F`, which
+the walkability test at `0x620C` refuses). Where each object lands was measured
+in openMSX: the top row of the screen is map row `220 - (0xE091)`, in all
+eleven plantings watched (`tools/objetos.py`).
+
 ## The machine changes nothing
 
 Of everything below `0x4000` the cartridge reads **one single address**:

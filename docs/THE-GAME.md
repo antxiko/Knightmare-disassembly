@@ -44,6 +44,58 @@ The builder is `0x6502` and it works like this:
 And the blocks **overlap each other**: `0x9C21` and `0x9C3E` fall halfway into
 another block, so one stretch of bytes serves as two different blocks.
 
+## The objects on the map
+
+The question-mark blocks, the grey blocks and the exits are **not in the map**.
+Each stage carries a **list of three-byte records `[type][row][x]`** at
+`0x6AF8` — 356 in all, grouped by stage through `0x6A98` — and `0x6A1E` plants
+each one at the top of the screen when the stage's row counter, `(0xE091)`,
+reaches its row. The type says everything:
+
+- **Bit 5**: visible from the start. Without it the block is **hidden** until
+  the first hit: `0x6883` paints the question mark of `0x6F40` as soon as
+  `(ix+1)` stops being zero.
+- **Bits 0-3**: how many shots it takes, from `0x6A7F`: 5 for 500 points, 10
+  for the bomb and the freeze, 15 for a life, **30 for EXIT**, 4 for the grey
+  block, 5 for the bridge — one more when it is visible.
+- **Bits 0-2**: what it drops, through the dispatch table at `0x6909`: a
+  **life** (the yellow scroll at `0x6F24`; `0x4305` is `una_vida_mas`), **500
+  points** (cyan), the **bomb** that kills everything on screen (blue), the
+  **freeze** (red), a **grey block** that stays where the question mark was and
+  **blocks the way** — its tiles `0x4C-0x4F` are walls for `se_puede_pisar` —,
+  the **EXIT sign** of `0x6F38`, or a **bridge** four tiles square over the
+  river (`0x9A9C`). Value 7 is not a block at all: it is a **side passage**
+  (types `0x97-0x9C`, born already open): pairs at the same row, one at x=1 and
+  one at x=248, strips eight pixels wide and 32, 64 or 96 tall; push outwards
+  and Popolon comes out on the other edge (`0x69FA` flips `(0xE604)`, his x).
+
+**The warps.** Six EXIT signs, all hidden and only in stages 1 to 4: 1→2, 1→3,
+2→3, 2→4, 3→5 and 4→6 — the pair `[row][extra stages]` at `0x6A8C`, plus the
+one the end of the stage adds. An EXIT is only planted if `(0xE006)`, the
+highest stage completed since power-on, reaches the current one (`0x6A22`).
+`0x4236` caps that counter at 4, which is exactly the last stage with an exit,
+and only INIT clears it: a game over does not.
+
+Here are the eight maps again with the objects on them. Each block shows its
+question mark where it is born — white frame if visible, dashed magenta if
+hidden — and, touching it, what it drops; the bridges are painted where the
+game paints them, around the block; the passages are the cyan strips at the
+edges. Where each one lands was **measured in openMSX**, not assumed: at eleven
+plantings across six stages the top row of the screen was always map row
+`220 - (0xE091)`, and that counter climbs to `0xD8` without resetting between
+sections (`0x6463`), so a record sits at row `220 - y`, column `x/8`
+(`tools/objetos.py`).
+
+| | | | |
+|:-:|:-:|:-:|:-:|
+| ![Stage 1, objects](imagenes/fase_1_objetos.png) | ![Stage 2, objects](imagenes/fase_2_objetos.png) | ![Stage 3, objects](imagenes/fase_3_objetos.png) | ![Stage 4, objects](imagenes/fase_4_objetos.png) |
+| **Stage 1** | **Stage 2** | **Stage 3** | **Stage 4** |
+| ![Stage 5, objects](imagenes/fase_5_objetos.png) | ![Stage 6, objects](imagenes/fase_6_objetos.png) | ![Stage 7, objects](imagenes/fase_7_objetos.png) | ![Stage 8, objects](imagenes/fase_8_objetos.png) |
+| **Stage 5** | **Stage 6** | **Stage 7** | **Stage 8** |
+
+*36, 42, 42, 46, 52, 50, 45 and 43 objects; in stages 6 and 8 every one of them
+is hidden. Asked for by theNestruo in issue #1.*
+
 ## The rivers and the bridges do not belong to the stage
 
 A stage's tile sheet **is not loaded by the stage alone**. Before building it,

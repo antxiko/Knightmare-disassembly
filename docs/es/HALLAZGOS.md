@@ -148,6 +148,27 @@ segun por donde se entre.
 41, 38, 36, 33, 30 y 35— y la distancia entre dos punteros consecutivos de
 `0x704B` es **exactamente el doble**. Las ocho, sin sobrar ni faltar un byte.
 
+## Los warps solo se abren en la segunda partida
+
+Seis de los 356 objetos del mapa (`0x6AF8`) sueltan el **cartel EXIT**, y
+tocarlo salta hacia delante: 1→2, 1→3, 2→3, 2→4, 3→5 y 4→6, por las parejas de
+`0x6A8C` mas la fase que suma el final. Pero `0x6A22` solo siembra un EXIT si
+`(0xE006)` -la fase mas alta cerrada desde el encendido, que escribe `0x4232`-
+ha llegado a la fase actual. Esa cuenta esta **clavada en 4** por `0x4236`,
+justo la ultima fase con salida, y solo INIT la borra: hay que acabar la fase
+una vez y, en la partida siguiente, encontrar su salida, escondida y a treinta
+disparos.
+
+## Los puentes estan escondidos en el rio
+
+Treinta y seis de esos objetos sueltan un **puente**: cinco disparos a un sitio
+escondido y `0x69BC` pinta alrededor los tablones de cuatro por cuatro de
+`0x9A9C`; diecinueve de ellos en la fase 7, la del agua. Y los bloques grises
+son el truco contrario: un interrogante que, roto, deja una **pared** (`0x6F34`,
+casillas `0x4C-0x4F`, las que rechaza la prueba de pisar de `0x620C`). Donde
+cae cada objeto esta medido en openMSX: la fila de arriba de la pantalla es la
+`220 - (0xE091)` del mapa, en las once siembras vigiladas (`tools/objetos.py`).
+
 ## La maquina no cambia nada
 
 El cartucho lee de todo lo que hay por debajo de `0x4000` **una sola

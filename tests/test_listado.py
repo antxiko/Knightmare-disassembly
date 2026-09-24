@@ -319,6 +319,74 @@ class TestLasOleadas(unittest.TestCase):
                             "la fase %d tiene un decimo indice raro" % fase)
 
 
+class TestLosObjetosDelMapa(unittest.TestCase):
+    """La lista de 0x6AF8: 356 registros [tipo][fila][x] que siembra 0x6A1E.
+    Son los interrogantes, los bloques grises, los puentes, los carteles EXIT
+    y los pasadizos; tools/objetos.py los pinta sobre el mapa."""
+
+    CUENTAS = (36, 42, 42, 46, 52, 50, 45, 43)
+
+    def registros(self, fase):
+        base = w(0x6A98 + 12 * fase)
+        fin = w(0x6A98 + 12 * (fase + 1)) if fase < 7 else 0x6F24
+        return [(b(a), b(a + 1), b(a + 2)) for a in range(base, fin, 3)]
+
+    def test_son_356_registros_seguidos_hasta_los_dibujos(self):
+        cuentas = tuple(len(self.registros(f)) for f in range(8))
+        self.assertEqual(cuentas, self.CUENTAS)
+        self.assertEqual(sum(cuentas), 356)
+        for f in range(7):                        # las bases van seguidas
+            self.assertEqual(w(0x6A98 + 12 * f) + 3 * self.CUENTAS[f],
+                             w(0x6A98 + 12 * (f + 1)))
+
+    def test_los_seis_exit_casan_con_la_tabla_de_saltos(self):
+        """Seis registros de tipo 0x15, solo en las fases 1 a 4, y sus filas
+        son exactamente las seis primeras de las parejas de 0x6A8C."""
+        exits = [(f, y) for f in range(8)
+                 for t, y, x in self.registros(f) if (t & 0x1F) == 0x15]
+        self.assertEqual(len(exits), 6)
+        self.assertTrue(all(f <= 3 for f, y in exits), exits)
+        self.assertEqual(sorted(y for f, y in exits),
+                         sorted(b(0x6A8C + 2 * i) for i in range(6)))
+        # y el salto es cero o uno: a la fase siguiente, o a la otra
+        self.assertTrue(all(b(0x6A8D + 2 * i) in (0, 1) for i in range(6)))
+
+    def test_la_tabla_de_saltos_pisa_dos_aguantes_que_nadie_usa(self):
+        """0x6A8C arranca dos bytes antes de que acabe la tabla de 0x6A7F, y
+        no pasa nada: los tipos 13 y 14 no salen en ningun registro."""
+        nibbles = {t & 0x0F for f in range(8) for t, y, x in self.registros(f)}
+        self.assertFalse(nibbles & {13, 14})
+        self.assertEqual(max(nibbles), 12)
+
+    def test_los_pasadizos_van_en_parejas_a_la_misma_fila(self):
+        """Los tipos 0x17 en adelante nacen rotos (0x6A32) y son los pasadizos:
+        uno en x=1 y otro en x=248, y el bit 0 de su aguante dice el lado."""
+        for f in range(8):
+            pas = [(t, y, x) for t, y, x in self.registros(f)
+                   if (t & 0x1F) >= 0x17]
+            self.assertEqual(len(pas) % 2, 0, "fase %d" % f)
+            for (t1, y1, x1), (t2, y2, x2) in zip(pas[::2], pas[1::2]):
+                self.assertEqual((y1, x1, x2), (y2, 1, 248), "fase %d" % f)
+                self.assertEqual(b(0x6A7F + (t1 & 0xF)) & 1, 0)
+                self.assertEqual(b(0x6A7F + (t2 & 0xF)) & 1, 1)
+
+    def test_los_tipos_son_los_que_reparte_0x6909(self):
+        """Todos llevan el bit 4 -bajan con el decorado-; los bloques son 0x1n
+        o 0x3n con n de 0 a 6, sin los bits 6 y 7, que son de estado."""
+        for f in range(8):
+            for t, y, x in self.registros(f):
+                self.assertTrue(t & 0x10, "fase %d tipo %02X" % (f, t))
+                if (t & 0x1F) < 0x17:
+                    self.assertEqual(t & 0xC0, 0, "fase %d tipo %02X" % (f, t))
+                    self.assertIn(t & 0x0F, range(7), "fase %d tipo %02X" % (f, t))
+
+    def test_los_ocho_mapas_con_objetos_estan_publicados(self):
+        carpeta = os.path.join(RAIZ, "docs", "imagenes")
+        faltan = ["fase_%d_objetos.png" % f for f in range(1, 9)
+                  if not os.path.exists(os.path.join(carpeta, "fase_%d_objetos.png" % f))]
+        self.assertEqual(faltan, [], "faltan: %s" % faltan)
+
+
 class TestLaMusicaYLosGraficos(unittest.TestCase):
     def test_los_63_punteros_de_voz_caen_en_los_guiones(self):
         for k in range(1, 64):

@@ -45,6 +45,59 @@ El montador es `0x6502` y trabaja asi:
 Y los bloques **se solapan entre si**: `0x9C21` y `0x9C3E` caen a medio bloque
 de otro, asi que un mismo tramo de bytes sirve de dos bloques distintos.
 
+## Los objetos del mapa
+
+Los bloques de interrogante, los bloques grises y las salidas **no estan en el
+mapa**. Cada fase lleva una **lista de registros de tres bytes
+`[tipo][fila][x]`** en `0x6AF8` -356 en total, agrupados por fase desde
+`0x6A98`-, y `0x6A1E` siembra cada uno arriba de la pantalla cuando la cuenta
+de filas de la fase, `(0xE091)`, llega a la suya. El tipo lo dice todo:
+
+- **Bit 5**: visible desde que nace. Sin el, el bloque esta **escondido** hasta
+  el primer disparo: `0x6883` pinta el interrogante de `0x6F40` en cuanto
+  `(ix+1)` deja de ser cero.
+- **Bits 0-3**: cuantos disparos aguanta, por `0x6A7F`: 5 los 500 puntos, 10 la
+  bomba y el congelar, 15 la vida, **30 el EXIT**, 4 el bloque gris, 5 el
+  puente; uno mas si es visible.
+- **Bits 0-2**: lo que suelta, por la tabla de reparto de `0x6909`: una
+  **vida** (el pergamino amarillo de `0x6F24`; `0x4305` es `una_vida_mas`),
+  **500 puntos** (cian), la **bomba** que mata todo lo que hay en pantalla
+  (azul), el **congelar** (rojo), un **bloque gris** que se queda donde estaba
+  el interrogante y **cierra el paso** -sus casillas `0x4C-0x4F` son pared para
+  `se_puede_pisar`-, el **cartel EXIT** de `0x6F38`, o un **puente** de cuatro
+  por cuatro sobre el rio (`0x9A9C`). El valor 7 no es un bloque: es un
+  **pasadizo lateral** (tipos `0x97-0x9C`, que nacen ya abiertos): parejas a
+  la misma fila, uno en x=1 y otro en x=248, franjas de ocho pixeles de ancho y
+  32, 64 o 96 de alto; empujando hacia fuera, Popolon sale por el otro borde
+  (`0x69FA` da la vuelta a `(0xE604)`, su x).
+
+**Los warps.** Seis carteles EXIT, todos escondidos y solo en las fases 1 a 4:
+1→2, 1→3, 2→3, 2→4, 3→5 y 4→6 -la pareja `[fila][fases de mas]` de `0x6A8C`,
+mas la que suma el fin de fase-. Un EXIT solo nace si `(0xE006)`, la fase mas
+alta cerrada desde el encendido, llega a la actual (`0x6A22`). `0x4236` deja
+esa cuenta clavada en 4, que es justo la ultima fase con salida, y solo INIT la
+borra: el game over no.
+
+Aqui van otra vez los ocho mapas con los objetos encima. Cada bloque ensena su
+interrogante donde nace -marco blanco si es visible, magenta punteado si esta
+escondido- y, pegado a el, lo que suelta; los puentes van donde los pinta el
+juego, alrededor del bloque; los pasadizos son las franjas cian de los bordes.
+Donde cae cada uno esta **medido en openMSX**, no supuesto: en once siembras de
+seis fases la fila de arriba de la pantalla fue siempre la `220 - (0xE091)` del
+mapa, y esa cuenta sube hasta `0xD8` sin volver a cero entre tramos (`0x6463`),
+asi que un registro cae en la fila `220 - fila`, columna `x/8`
+(`tools/objetos.py`).
+
+| | | | |
+|:-:|:-:|:-:|:-:|
+| ![Fase 1, objetos](../imagenes/fase_1_objetos.png) | ![Fase 2, objetos](../imagenes/fase_2_objetos.png) | ![Fase 3, objetos](../imagenes/fase_3_objetos.png) | ![Fase 4, objetos](../imagenes/fase_4_objetos.png) |
+| **Fase 1** | **Fase 2** | **Fase 3** | **Fase 4** |
+| ![Fase 5, objetos](../imagenes/fase_5_objetos.png) | ![Fase 6, objetos](../imagenes/fase_6_objetos.png) | ![Fase 7, objetos](../imagenes/fase_7_objetos.png) | ![Fase 8, objetos](../imagenes/fase_8_objetos.png) |
+| **Fase 5** | **Fase 6** | **Fase 7** | **Fase 8** |
+
+*36, 42, 42, 46, 52, 50, 45 y 43 objetos; en las fases 6 y 8 estan todos
+escondidos. Lo pidio theNestruo en el issue #1.*
+
 ## Los rios y los puentes no son de la fase
 
 La hoja de casillas de una fase **no la carga sola la fase**. Antes de montarla,
