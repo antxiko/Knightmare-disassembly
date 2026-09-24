@@ -76,9 +76,9 @@ highest stage completed since power-on, reaches the current one (`0x6A22`).
 `0x4236` caps that counter at 4, which is exactly the last stage with an exit,
 and only INIT clears it: a game over does not.
 
-Here are the eight maps again with the objects on them. Each block shows its
-question mark where it is born — white frame if visible, dashed magenta if
-hidden — and, touching it, what it drops; the bridges are painted where the
+Here are the eight maps again with the objects on them, already broken: where
+each question mark is born sits what it drops — framed white if the block is
+visible, dashed magenta if it is hidden —; the bridges are painted where the
 game paints them, around the block; the passages are the cyan strips at the
 edges. Where each one lands was **measured in openMSX**, not assumed: at eleven
 plantings across six stages the top row of the screen was always map row

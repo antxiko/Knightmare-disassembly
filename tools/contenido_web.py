@@ -174,17 +174,17 @@ FASES = [
      "band."),
     ("fase_1_objetos.png",
      "<b>Fase 1, con sus objetos.</b> Los 36 registros de la lista de 0x6AF8 "
-     "puestos donde nacen: cada interrogante con marco blanco si es visible y "
-     "magenta punteado si esta escondido, y pegado a el lo que suelta "
-     "(pergamino amarillo una vida, cian 500 puntos, azul bomba, rojo "
-     "congelar; bloque gris; cartel EXIT con su fase de destino; puente). Las "
-     "franjas cian de los bordes son los pasadizos.",
+     "puestos donde nacen y ya rotos: en el sitio de cada interrogante, lo que "
+     "suelta (pergamino amarillo una vida, cian 500 puntos, azul bomba, rojo "
+     "congelar; bloque gris; cartel EXIT con su fase de destino; puente), con "
+     "marco blanco si el bloque es visible y magenta punteado si esta "
+     "escondido. Las franjas cian de los bordes son los pasadizos.",
      "<b>Stage 1, with its objects.</b> The 36 records of the list at 0x6AF8 "
-     "where they are born: each question mark framed white if visible and "
-     "dashed magenta if hidden, and touching it what it drops (yellow scroll "
-     "a life, cyan 500 points, blue bomb, red freeze; grey block; EXIT sign "
-     "with its destination stage; bridge). The cyan strips at the edges are "
-     "the side passages."),
+     "where they are born, already broken: in each question mark's place, "
+     "what it drops (yellow scroll a life, cyan 500 points, blue bomb, red "
+     "freeze; grey block; EXIT sign with its destination stage; bridge), "
+     "framed white if the block is visible and dashed magenta if hidden. The "
+     "cyan strips at the edges are the side passages."),
     ("fase_2_objetos.png",
      "<b>Fase 2, con sus objetos.</b> 42, y dos salidas: a la 3 y a la 4.",
      "<b>Stage 2, with its objects.</b> 42 of them, and two exits: to 3 and "

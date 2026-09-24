@@ -78,10 +78,10 @@ alta cerrada desde el encendido, llega a la actual (`0x6A22`). `0x4236` deja
 esa cuenta clavada en 4, que es justo la ultima fase con salida, y solo INIT la
 borra: el game over no.
 
-Aqui van otra vez los ocho mapas con los objetos encima. Cada bloque ensena su
-interrogante donde nace -marco blanco si es visible, magenta punteado si esta
-escondido- y, pegado a el, lo que suelta; los puentes van donde los pinta el
-juego, alrededor del bloque; los pasadizos son las franjas cian de los bordes.
+Aqui van otra vez los ocho mapas con los objetos encima, ya rotos: donde nace
+cada interrogante esta lo que suelta -con marco blanco si el bloque es visible,
+magenta punteado si esta escondido-; los puentes van donde los pinta el juego,
+alrededor del bloque; los pasadizos son las franjas cian de los bordes.
 Donde cae cada uno esta **medido en openMSX**, no supuesto: en once siembras de
 seis fases la fila de arriba de la pantalla fue siempre la `220 - (0xE091)` del
 mapa, y esa cuenta sube hasta `0xD8` sin volver a cero entre tramos (`0x6463`),

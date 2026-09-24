@@ -109,44 +109,19 @@ def dibujo(px, w, x0, y0, pat, col, direccion, filas, cols):
                              direccion[f * cols + c])
 
 
-def hueco_libre(ocupadas, fila, col, filas, cols, ancho_mapa=32):
-    """El primer sitio libre pegado al bloque: derecha, izquierda, abajo,
-    arriba. Devuelve (fila, col) o None."""
-    for f, c in ((fila, col + 2), (fila, col - cols), (fila + 2, col),
-                 (fila - filas, col)):
-        celdas = {(f + i, c + j) for i in range(filas) for j in range(cols)}
-        if c < 0 or c + cols > ancho_mapa or f < 0:
-            continue
-        if not (celdas & ocupadas):
-            ocupadas |= celdas
-            return f, c
-    return None
-
-
 def monta_los_objetos(rom, fase, px, w, h, pat, col):
     """Pinta encima del mapa los objetos de la fase. Devuelve la lista.
 
-    Cada bloque va con su interrogante -el dibujo de 0x6F40 que el juego
-    pinta en cuanto lo tocas- en el sitio en que nace, con marco blanco si
-    es visible y magenta punteado si esta escondido; y PEGADO a el, lo que
-    suelta al romperse. El puente se pinta donde lo pinta 0x69C9: alrededor.
+    Cada bloque se pinta donde nace y YA ROTO: en el sitio del interrogante
+    va lo que suelta -el pergamino, el bloque gris o el cartel EXIT-, con
+    marco blanco si el bloque es visible y magenta punteado si esta
+    escondido. El puente se pinta donde lo pinta 0x69C9: alrededor.
     """
     lista = []
     for t, y, x in registros(rom, fase):
         o = clasifica(rom, fase, t, y, x)
         o["tipo"] = t
         lista.append(o)
-    ocupadas = set()
-    for o in lista:
-        if o["clase"] == 7:
-            continue
-        if o["clase"] == 6:
-            ocupadas |= {(o["fila"] - 2 + i, o["col"] - 1 + j)
-                         for i in range(4) for j in range(4)}
-        else:
-            ocupadas |= {(o["fila"] + i, o["col"] + j)
-                         for i in range(2) for j in range(2)}
-    interrogante = [rom.b(INTERROGANTE + i) for i in range(4)]
     for o in lista:
         X, Y = o["col"] * 8, o["fila"] * 8
         if o["clase"] == 7:
@@ -164,29 +139,19 @@ def monta_los_objetos(rom, fase, px, w, h, pat, col):
         color, punteado = (BLANCO, False) if o["visible"] else (MAGENTA, True)
         if o["clase"] == 6:
             # el puente: cuatro por cuatro, dos filas arriba y una columna a
-            # la izquierda, que es el (-16, -8) que suma 0x69C9; y el bloque
-            # que lo suelta, encima
+            # la izquierda, que es el (-16, -8) que suma 0x69C9; el marco
+            # marca el bloque que lo suelta
             bloque = [rom.b(PUENTE + i) for i in range(16)]
             dibujo(px, w, X - 8, Y - 16, pat, col, bloque, 4, 4)
-            dibujo(px, w, X, Y, pat, col, interrogante, 2, 2)
             marco(px, w, h, X, Y, 16, 16, color, punteado)
             continue
-        # el bloque, con su interrogante
-        dibujo(px, w, X, Y, pat, col, interrogante, 2, 2)
-        marco(px, w, h, X, Y, 16, 16, color, punteado)
-        # y lo que suelta, pegado a el
-        cols = 3 if o["clase"] == 5 else 2
-        sitio = hueco_libre(ocupadas, o["fila"], o["col"], 2, cols)
-        if sitio is None:
-            o["sin_sitio"] = True
-            continue
-        f, c = sitio
+        # lo que suelta, en el sitio del interrogante
         cuatro = [rom.b(DIBUJOS[o["clase"]] + i) for i in range(4)]
-        dibujo(px, w, c * 8, f * 8, pat, col, cuatro, 2, 2)
+        dibujo(px, w, X, Y, pat, col, cuatro, 2, 2)
+        marco(px, w, h, X, Y, 16, 16, color, punteado)
         if o["clase"] == 5 and "destino" in o:
             # la fase de destino, con la cifra de la fuente, a su derecha
-            M.dibuja_casilla(px, w, c * 8 + 16, f * 8 + 4, pat, col,
-                             0x10 + o["destino"])
+            M.dibuja_casilla(px, w, X + 17, Y + 4, pat, col, 0x10 + o["destino"])
     return lista
 
 
